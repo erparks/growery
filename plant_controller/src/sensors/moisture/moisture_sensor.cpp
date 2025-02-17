@@ -1,17 +1,14 @@
-#include "moisture_sensor.h"
 #include <Arduino.h>
+#include "sensors/moisture/moisture_sensor.h"
 
-#define SENSOR_PIN A0 // Define the sensor pin
+void initMoistureSensor(){
 
-void initMoistureSensor()
-{
-    Serial.begin(115200);
-    while (!Serial)
-        ;
-    Serial.println("Soil Moisture Sensor Initialized");
 }
 
-int readMoisture()
+// Dry soil → Higher values (~800-1023)
+// Moist soil → Medium values (~300-700)
+// Wet soil → Lower values (~100-300)
+int readMoisture(int pin)
 {
-    return analogRead(SENSOR_PIN); // Read and return sensor value
+    return analogRead(pin);
 }
