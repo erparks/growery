@@ -11,9 +11,20 @@ def get_plants():
     return jsonify([{"id": p.id, "nickname": p.nickname, "created_at": p.created_at} for p in plants])
 
 @plants_bp.route("/", methods=["POST"])
-def add_plant():
+def create_plant():
     data = request.get_json()
     new_plant = Plants(nickname=data["nickname"], species=data["species"])
     db.session.add(new_plant)
     db.session.commit()
     return jsonify(new_plant.to_dict()), 201
+
+@plants_bp.route("/<int:plant_id>", methods=["DELETE"])
+def delete_plant(plant_id):
+    plant = Plants.query.get(plant_id)
+    if not plant:
+        return jsonify({"error": "plant not found"}), 404
+    
+    db.session.delete(plant)
+    db.session.commit()
+
+    return jsonify({"message": f"pant {plant_id} removed"}), 204
