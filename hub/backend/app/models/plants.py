@@ -8,4 +8,4 @@ class Plants(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.now(timezone.utc))
 
     def to_dict(self):
-        return {"id": self.id, "nickname": self.nickname, "species": self.species}
+        return {"id": self.id, "nickname": self.nickname, "species": self.species, "created_at": self.created_at}
