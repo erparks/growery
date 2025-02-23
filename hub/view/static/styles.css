@@ -1,0 +1,102 @@
+.container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+    align-items: flex-end;
+}
+
+.flex-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.flex-grid .card {
+    flex: 1 1 100%;
+    max-width: 300px;
+}
+
+@media (min-width: 600px) {
+    .flex-grid .card {
+        flex: 1 1 calc(50% - 1rem);
+    }
+}
+
+/* Three columns on larger screens */
+@media (min-width: 900px) {
+    .flex-grid .card {
+        flex: 1 1 calc(33.333% - 1rem);
+    }
+}
+
+/* Four columns on extra-large screens */
+@media (min-width: 1200px) {
+    .flex-grid .card {
+        flex: 1 1 calc(25% - 1rem);
+    }
+}
+
+.card {
+    flex: 1 1 300px;
+    border: 1px solid #ddd;
+    padding: 1rem;
+    text-align: center;
+    border-radius: 8px;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+a {
+    all: unset;
+    display: block;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+}
+
+
+body {
+    background-color: #0a0f0d;
+    color: #00ff88;
+    font-family: 'Source Code Pro', monospace;
+    background-image:
+        linear-gradient(rgba(0, 255, 0, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 0, 0.05) 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+.app-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 3rem;
+    color: #00ff00;
+    letter-spacing: 2px;
+    animation: grow 2s infinite ease-in-out;
+    /* Remove gradient & add a neon glow */
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+
+    text-shadow: 0 0 10px #00ff00,
+        0 0 2px #33ff33,
+        0 0 2px #00ff00;
+
+    display: inline-block;
+}
+
+.text-small {
+    font-size: small;
+}
+
+@keyframes grow {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.075);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
