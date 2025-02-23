@@ -1,0 +1,8 @@
+{
+    "watch": [
+        "src",
+        "static"
+    ],
+    "ext": "svelte,js,ts",
+    "exec": "npm run build"
+}
