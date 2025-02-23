@@ -8,7 +8,7 @@ plants_bp = Blueprint("plants", __name__)
 @plants_bp.route("/", methods=["GET"])
 def get_plants():
     plants = Plants.query.all()
-    return jsonify([{"id": p.id, "nickname": p.nickname, "created_at": p.created_at} for p in plants])
+    return jsonify([p.to_dict() for p in plants])
 
 @plants_bp.route("/", methods=["POST"])
 def create_plant():
