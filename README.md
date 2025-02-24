@@ -8,7 +8,7 @@ The hub is the central place to receive reports and control operations
 ### backend
 The backend of the hub receives REST request from monitors and uses that data to control devices
 
-run with `python3 app.py`
+run with `python3 run.py`
 
 ### frontend
 TBD should show plant status
