@@ -14,17 +14,12 @@ class PumpController():
 
         GPIO.output(_MOTOR_BI, GPIO.LOW)
         GPIO.output(_MOTOR_FI, GPIO.LOW)
-        print("initialized to LOW")
 
     def on(self):
         GPIO.output(_MOTOR_BI, GPIO.HIGH)
         GPIO.output(_MOTOR_FI, GPIO.LOW)
-        print("ON")
 
         time.sleep(_PUMP_DURATION_SECONDS)
 
         GPIO.output(_MOTOR_BI, GPIO.LOW)
         GPIO.output(_MOTOR_FI, GPIO.LOW)
-        print("OFF")
-
-        return

@@ -3,6 +3,6 @@
         "src",
         "static"
     ],
-    "ext": "svelte,js,ts",
+    "ext": "svelte,js,ts,css",
     "exec": "npm run build"
 }
