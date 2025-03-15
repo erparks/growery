@@ -1,0 +1,11 @@
+[Unit]
+Description=Hub Startup
+After=network.target
+
+[Service]
+ExecStart=/hub/system/start.sh
+Restart=always
+User=ethan
+
+[Install]
+WantedBy=multi-user.target
