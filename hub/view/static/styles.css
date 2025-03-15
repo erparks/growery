@@ -1,9 +1,15 @@
 .container {
     display: flex;
     flex-wrap: wrap;
-    gap: 1rem;
+    gap: 2rem;
     justify-content: center;
     align-items: flex-end;
+}
+
+.container.column {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: stretch;
 }
 
 .flex-grid {
@@ -15,7 +21,6 @@
 
 .flex-grid .card {
     flex: 1 1 100%;
-    max-width: 300px;
 }
 
 @media (min-width: 600px) {
@@ -64,6 +69,7 @@ body {
         linear-gradient(rgba(0, 255, 0, 0.05) 1px, transparent 1px),
         linear-gradient(90deg, rgba(0, 255, 0, 0.05) 1px, transparent 1px);
     background-size: 20px 20px;
+    padding: 2rem;
 }
 
 .app-title {
@@ -99,4 +105,23 @@ body {
     100% {
         transform: scale(1);
     }
+}
+
+.pump-button {
+    background: black;
+    border: 2px solid #00ff00;
+    color: #00ff00;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 16px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    box-shadow: 0 0 10px #00ff00;
+    border-radius: 8px;
+}
+
+.pump-button-pumping {
+    background: #00ff00;
+    color: black;
+    box-shadow: 0 0 20px #00ff00;
 }

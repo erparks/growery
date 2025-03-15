@@ -18,6 +18,14 @@ def create_plant():
     db.session.commit()
     return jsonify(new_plant.to_dict()), 201
 
+@plants_bp.route("/<int:plant_id>", methods=["GET"])
+def get_plan(plant_id):
+    plant = Plants.query.get(plant_id)
+    if not plant:
+        return jsonify({"error": "plant not found"}), 404
+    
+    return jsonify(plant.to_dict())
+
 @plants_bp.route("/<int:plant_id>", methods=["DELETE"])
 def delete_plant(plant_id):
     plant = Plants.query.get(plant_id)
