@@ -1,3 +1,5 @@
-cd /hub/system
-source ../hub_env/bin/activate
+#!/bin/bash
+
+source /hub/hub_env/bin/activate
+cd /hub/backend
 python3 run.py
