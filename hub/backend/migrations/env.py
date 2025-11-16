@@ -45,9 +45,10 @@ target_db = current_app.extensions['migrate'].db
 
 
 def get_metadata():
-    # Import models to ensure they're registered with SQLAlchemy metadata
+    # Import all models to ensure they're registered with SQLAlchemy metadata
     # This is needed for Alembic autogenerate to detect model changes
-    from models.plants import Plants  # noqa: F401
+    # The models.__init__ automatically imports all models in the package
+    import models  # noqa: F401
     if hasattr(target_db, 'metadatas'):
         return target_db.metadatas[None]
     return target_db.metadata
