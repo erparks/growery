@@ -1,6 +1,8 @@
 from flask import Flask, request
 from database import db, migrate
 from config import Config
+# Import models to ensure they're registered with SQLAlchemy for migrations
+from models.plants import Plants  # noqa: F401
 from routes.plants import plants_bp
 from routes.static import static_bp
 from routes.controls import controls_bp

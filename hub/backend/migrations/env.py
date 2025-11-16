@@ -34,8 +34,7 @@ def get_engine_url():
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-# from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
+# Import all models to ensure they're registered with SQLAlchemy metadata
 config.set_main_option('sqlalchemy.url', get_engine_url())
 target_db = current_app.extensions['migrate'].db
 
@@ -46,6 +45,9 @@ target_db = current_app.extensions['migrate'].db
 
 
 def get_metadata():
+    # Import models to ensure they're registered with SQLAlchemy metadata
+    # This is needed for Alembic autogenerate to detect model changes
+    from models.plants import Plants  # noqa: F401
     if hasattr(target_db, 'metadatas'):
         return target_db.metadatas[None]
     return target_db.metadata

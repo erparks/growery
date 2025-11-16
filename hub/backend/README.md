@@ -29,7 +29,29 @@ To clean up Docker containers and images (from `hub/backend/`):
 
 The database is automatically initialized when using Docker Compose. The schema is loaded from `init-schema.sql` on first startup.
 
-For manual database operations:
+### Database Migrations
+
+Since the local environment doesn't have Python dependencies, use the helper script to run Flask migration commands inside the Docker container:
+
+```bash
+# Generate a new migration
+./flask-db.sh migrate -m "description of changes"
+
+# Apply migrations
+./flask-db.sh upgrade
+
+# Check current migration version
+./flask-db.sh current
+
+# View migration history
+./flask-db.sh history
+```
+
+The migrations directory is mounted as a volume, so any migrations created in the container will appear in your local `migrations/` directory.
+
+### Manual Database Operations
+
+For direct database access:
 ```bash
 docker exec -it growery_db psql -U growery_user -d growery
 ```
