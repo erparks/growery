@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  flask:
+    environment:
+      # Keep existing DATABASE_URL from base compose file
+      DATABASE_URL: postgresql://growery_user:growery_password@db:5432/growery
+      # Enable Flask debug mode and reloader
+      FLASK_ENV: development
+      FLASK_DEBUG: "1"
+    # Override entrypoint for dev mode with auto-reload
+    entrypoint: ["/entrypoint-dev.sh"]
+    # Enable stdin and tty for better output
+    stdin_open: true
+    tty: true

@@ -1,4 +1,4 @@
-from app.database import db
+from database import db
 from datetime import datetime, timezone
 
 class Plants(db.Model):

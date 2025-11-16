@@ -1,12 +1,101 @@
 #!/bin/bash
 
-pip freeze > requirements.txt
+# Deploy dockerized application to Raspberry Pi
+# This does a full sync and rebuild - use for:
+#   - Initial deployment
+#   - When dependencies change (requirements.txt)
+#   - When Dockerfile changes
+#   - When docker-compose.yml changes
+#
+# For code-only changes, use deploy-quick.sh instead
+# Usage: ./deploy.sh
 
-rsync -av --exclude='hub_env' ../ ethan@hub.local:/hub --rsync-path="sudo rsync"
+set -e
 
-ssh ethan@hub.local << EOF
-    cd /hub
-    source hub_env/bin/activate
-    cd system
-    pip install -r requirements.txt
-EOF
+PI_USER="ethan"
+PI_HOST="hub.local"
+PI_PATH="/hub"
+
+echo "🚀 Deploying to ${PI_USER}@${PI_HOST}..."
+
+# Sync files to Pi (excluding unnecessary files)
+echo "📦 Syncing files..."
+# Use trailing slash on source to sync contents, not the directory itself
+rsync -av --delete \
+    --exclude='hub_env' \
+    --exclude='docker_env' \
+    --exclude='__pycache__' \
+    --exclude='*.pyc' \
+    --exclude='.git' \
+    --exclude='.vscode' \
+    --exclude='node_modules' \
+    --exclude='*.log' \
+    --exclude='.env' \
+    ../ ${PI_USER}@${PI_HOST}:${PI_PATH}/ \
+    --rsync-path="sudo rsync"
+
+echo "✅ Files synced successfully!"
+
+# Deploy on Pi
+echo "🐳 Starting Docker containers on Pi..."
+ssh ${PI_USER}@${PI_HOST} << 'DEPLOY_EOF'
+    set -e
+    
+    # Debug: Show current directory structure
+    echo "📁 Checking directory structure..."
+    echo "Current directory: $(pwd)"
+    echo "Contents of /hub:"
+    ls -la /hub/ | head -20 || true
+    echo ""
+    echo "Looking for docker-compose.yml..."
+    find /hub -name "docker-compose.yml" -type f 2>/dev/null || echo "docker-compose.yml not found"
+    echo ""
+    
+    # Try to find the backend directory
+    if [ -d "/hub/backend" ]; then
+        BACKEND_DIR="/hub/backend"
+    elif [ -d "/hub/hub/backend" ]; then
+        BACKEND_DIR="/hub/hub/backend"
+    else
+        echo "❌ Error: Could not find backend directory"
+        echo "Available directories in /hub:"
+        ls -la /hub/
+        exit 1
+    fi
+    
+    echo "✅ Found backend directory at: $BACKEND_DIR"
+    cd "$BACKEND_DIR"
+    
+    # Verify docker-compose.yml exists
+    if [ ! -f "docker-compose.yml" ]; then
+        echo "❌ Error: docker-compose.yml not found in $BACKEND_DIR"
+        echo "Contents of $BACKEND_DIR:"
+        ls -la
+        exit 1
+    fi
+    
+    echo "✅ Found docker-compose.yml"
+    
+    # Detect docker compose command (supports both 'docker-compose' and 'docker compose')
+    if command -v docker-compose &> /dev/null; then
+        DOCKER_COMPOSE="docker-compose"
+    else
+        DOCKER_COMPOSE="docker compose"
+    fi
+    
+    echo "Stopping existing containers..."
+    # Note: 'down' does NOT remove volumes, so database data is preserved
+    sudo $DOCKER_COMPOSE down || true
+    
+    echo "Building and starting containers..."
+    sudo $DOCKER_COMPOSE up -d --build
+    
+    echo "Checking container status..."
+    sudo $DOCKER_COMPOSE ps
+    
+    echo "✅ Deployment complete!"
+    echo "📊 Container logs:"
+    sudo $DOCKER_COMPOSE logs --tail=20
+DEPLOY_EOF
+
+echo "🎉 Deployment finished! Your app should be running on http://${PI_HOST}:5000"

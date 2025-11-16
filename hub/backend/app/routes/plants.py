@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
-from app.database import db
-from app.models.plants import Plants
+from database import db
+from models.plants import Plants
 
 # Add the correct URL prefix
 plants_bp = Blueprint("plants", __name__)
@@ -8,7 +8,7 @@ plants_bp = Blueprint("plants", __name__)
 @plants_bp.route("/", methods=["GET"])
 def get_plants():
     plants = Plants.query.all()
-    return jsonify([p.to_dict() for p in plants])
+    return jsonify({"plants": [p.to_dict() for p in plants]})
 
 @plants_bp.route("/", methods=["POST"])
 def create_plant():

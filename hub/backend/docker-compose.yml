@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  flask:
+    build:
+      context: .
+      dockerfile: ./docker/app/Dockerfile
+    container_name: growery_flask
+    ports:
+      - "5000:5000"
+    environment:
+      DATABASE_URL: postgresql://growery_user:growery_password@db:5432/growery
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./app:/app
+      - ./migrations:/app/migrations
+    working_dir: /app
+    networks:
+      - growery-net
+    restart: unless-stopped
+
+  db:
+    image: postgres:15-alpine
+    container_name: growery_db
+    environment:
+      POSTGRES_USER: growery_user
+      POSTGRES_PASSWORD: growery_password
+      POSTGRES_DB: growery
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-schema.sql:/docker-entrypoint-initdb.d/01-init-schema.sql:ro
+    ports:
+      - "5432:5432" # Expose for external access if needed
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U growery_user -d growery" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - growery-net
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+
+networks:
+  growery-net:
