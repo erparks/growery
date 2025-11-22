@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify
-from app.controllers.pump_controller import PumpController
+from controllers.pump_controller import PumpController
 
 controls_bp = Blueprint("controls", __name__)
 pump_controller = PumpController()

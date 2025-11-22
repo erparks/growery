@@ -1,9 +1,11 @@
 from flask import Flask, request
-from app.database import db, migrate
-from app.config import Config
-from app.routes.plants import plants_bp
-from app.routes.static import static_bp
-from app.routes.controls import controls_bp
+from database import db, migrate
+from config import Config
+# Import models to ensure they're registered with SQLAlchemy for migrations
+from models.plants import Plants  # noqa: F401
+from routes.plants import plants_bp
+from routes.static import static_bp
+from routes.controls import controls_bp
 from flask_cors import CORS
 
 app = Flask(__name__, static_url_path=None, static_folder=None)
