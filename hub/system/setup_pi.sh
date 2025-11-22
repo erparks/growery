@@ -62,5 +62,5 @@ echo ""
 echo "Next steps:"
 echo "1. Log out and log back in (or run 'newgrp docker') to apply docker group changes"
 echo "2. From your development machine, run: ./hub/system/deploy.sh"
-echo "3. Your app will be available at http://$(hostname -I | awk '{print $1}'):5000"
+echo "3. Your app will be available at http://$(hostname -I | awk '{print $1}')"
 

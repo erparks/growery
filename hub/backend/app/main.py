@@ -27,4 +27,4 @@ if __name__ == "__main__":
     app.register_blueprint(controls_bp,  url_prefix="/api/pumps")
     app.register_blueprint(static_bp,  url_prefix="/")
 
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=80, debug=True)

@@ -4,7 +4,7 @@ This guide explains how to deploy the dockerized Growery application to your Ras
 
 ## Prerequisites
 
-1. **SSH Access**: Your Pi should be accessible via SSH at `ethan@hub.local`
+1. **SSH Access**: Your Pi should be accessible via SSH at `user@hub.local`
 2. **Network**: Your development machine and Pi should be on the same network
 
 ## Initial Setup (One-time)
@@ -13,12 +13,12 @@ This guide explains how to deploy the dockerized Growery application to your Ras
 
 1. **Copy the setup script to your Pi:**
    ```bash
-   scp hub/system/setup_pi.sh ethan@hub.local:/tmp/
+   scp hub/system/setup_pi.sh user@hub.local:/tmp/
    ```
 
 2. **SSH into your Pi and run the setup:**
    ```bash
-   ssh ethan@hub.local
+   ssh user@hub.local
    sudo bash /tmp/setup_pi.sh
    ```
 
@@ -74,18 +74,54 @@ This script will:
 ## Accessing Your Application
 
 After deployment, your application will be available at:
-- **API**: `http://hub.local:5000` (or `http://<pi-ip-address>:5000`)
+- **API**: `http://hub.local` (or `http://<pi-ip-address>`) - listening on port 80 (default HTTP port)
 - **Database**: Accessible on port 5432 (if needed externally)
 
-## Managing Containers on Pi
+## Viewing Logs
 
-You can SSH into your Pi to manage containers:
+### Using `logs.sh` (Recommended)
+
+The easiest way to view logs from your development machine:
 
 ```bash
-ssh ethan@hub.local
+cd hub/system
+./logs.sh
+```
+
+This will:
+- Connect to your Pi via SSH
+- Show live logs from the Flask service (default)
+- Stream logs in real-time (press Ctrl+C to exit)
+
+**Options:**
+- View a specific service: `./logs.sh db` (to view database logs)
+- Show more/less initial lines: `./logs.sh --tail 200` (shows last 200 lines)
+- Combine options: `./logs.sh db --tail 50` (database logs, last 50 lines)
+
+Examples:
+```bash
+# View Flask logs (default)
+./logs.sh
+
+# View database logs
+./logs.sh db
+
+# View last 500 lines of Flask logs
+./logs.sh --tail 500
+
+# View last 50 lines of database logs
+./logs.sh db --tail 50
+```
+
+### Managing Containers on Pi
+
+You can SSH into your Pi to manage containers directly:
+
+```bash
+ssh user@hub.local
 cd /hub/backend
 
-# View logs
+# View logs (alternative to logs.sh)
 sudo docker-compose logs -f
 
 # Stop containers
@@ -107,13 +143,14 @@ If you get permission errors, make sure:
 - Or use `sudo` with docker commands
 
 ### Port Already in Use
-If port 5000 is already in use:
-- Check what's using it: `sudo lsof -i :5000`
-- Or modify the port in `docker-compose.yml` (change `"5000:5000"` to `"8080:5000"` for example)
+If port 80 is already in use:
+- Check what's using it: `sudo lsof -i :80`
+- You may need to use `sudo` with docker-compose commands to bind to port 80 (privileged port)
+- Or modify the port in `docker-compose.yml` (change `"80:80"` to `"8080:80"` to use port 8080 on the host instead)
 
 ### Database Issues
 If the database isn't starting:
-- Check logs: `sudo docker-compose logs db`
+- Check logs: `sudo docker-compose logs db` or `./logs.sh db`
 - Ensure the `init-schema.sql` file was copied correctly
 - The database data persists in a Docker volume, so it won't be lost on redeploy
 
@@ -125,13 +162,13 @@ If the database isn't starting:
 
 To completely wipe data (if needed):
 ```bash
-ssh ethan@hub.local
+ssh user@hub.local
 cd /hub/backend
 sudo docker-compose down -v  # The -v flag removes volumes
 ```
 
 ### Connection Issues
 If you can't connect to `hub.local`:
-- Try using the IP address instead: `ssh ethan@<pi-ip-address>`
-- Update the `PI_HOST` variable in `deploy.sh` if needed
+- Try using the IP address instead: `ssh user@<pi-ip-address>`
+- Update the `PI_HOST` variable in `deploy.sh` and `logs.sh` if needed
 

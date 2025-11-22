@@ -18,6 +18,48 @@ PI_PATH="/hub"
 
 echo "🚀 Deploying to ${PI_USER}@${PI_HOST}..."
 
+# Build UI frontend before syncing
+echo "🎨 Building UI frontend..."
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+VIEW_DIR="${SCRIPT_DIR}/../view"
+
+if [ ! -d "$VIEW_DIR" ]; then
+    echo "❌ Error: View directory not found at $VIEW_DIR"
+    exit 1
+fi
+
+cd "$VIEW_DIR"
+
+# Check if node_modules exists, install if needed
+if [ ! -d "node_modules" ]; then
+    echo "📦 Installing frontend dependencies..."
+    npm install
+else
+    echo "✅ Dependencies already installed"
+fi
+
+# Build the frontend (outputs to hub/backend/static/)
+echo "🔨 Building frontend..."
+npm run build
+
+if [ $? -ne 0 ]; then
+    echo "❌ Error: Frontend build failed"
+    exit 1
+fi
+
+# Verify build output exists
+BACKEND_STATIC_DIR="${SCRIPT_DIR}/../backend/static"
+if [ ! -d "$BACKEND_STATIC_DIR" ] || [ ! -f "$BACKEND_STATIC_DIR/index.html" ]; then
+    echo "❌ Error: Frontend build output not found at $BACKEND_STATIC_DIR"
+    echo "Expected index.html in static directory"
+    exit 1
+fi
+
+echo "✅ Frontend built successfully! (Output: $BACKEND_STATIC_DIR)"
+
+# Return to original directory for rsync
+cd "$SCRIPT_DIR"
+
 # Sync files to Pi (excluding unnecessary files)
 echo "📦 Syncing files..."
 # Use trailing slash on source to sync contents, not the directory itself
@@ -98,4 +140,4 @@ ssh ${PI_USER}@${PI_HOST} << 'DEPLOY_EOF'
     sudo $DOCKER_COMPOSE logs --tail=20
 DEPLOY_EOF
 
-echo "🎉 Deployment finished! Your app should be running on http://${PI_HOST}:5000"
+echo "🎉 Deployment finished! Your app should be running on http://${PI_HOST}"

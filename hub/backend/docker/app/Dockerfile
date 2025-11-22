@@ -22,10 +22,15 @@ COPY app/ .
 # Note: Adjust based on your actual project structure
 COPY migrations/ ./migrations/
 
+# Create static directory
+# In dev mode, static files are mounted via volume mount (see docker-compose.yml)
+# For production, static files should be copied after building the UI
+RUN mkdir -p ./static
+
 # Copy and set up entrypoint scripts
 COPY docker/app/entrypoint.sh /entrypoint.sh
 COPY docker/app/entrypoint-dev.sh /entrypoint-dev.sh
 RUN chmod +x /entrypoint.sh /entrypoint-dev.sh
 
-EXPOSE 5000
+EXPOSE 80
 ENTRYPOINT ["/entrypoint.sh"]

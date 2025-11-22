@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Quick deploy for code changes only (no rebuild)
-# Use this when you only changed Python code and don't need to rebuild images
+# Use this when you only changed Python code or UI code and don't need to rebuild images
 # Usage: ./deploy-quick.sh
 
 set -e
@@ -11,6 +11,23 @@ PI_HOST="hub.local"
 PI_PATH="/hub"
 
 echo "🚀 Quick deploy (code sync + restart) to ${PI_USER}@${PI_HOST}..."
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Check if UI files have changed (if static directory exists and is newer than last build)
+VIEW_DIR="${SCRIPT_DIR}/../view"
+BACKEND_STATIC_DIR="${SCRIPT_DIR}/../backend/static"
+
+# If static directory exists, sync it (UI changes)
+if [ -d "$BACKEND_STATIC_DIR" ] && [ -f "$BACKEND_STATIC_DIR/index.html" ]; then
+    echo "📦 Syncing UI static files..."
+    rsync -av \
+        --exclude='*.log' \
+        --exclude='.env' \
+        "$BACKEND_STATIC_DIR/" ${PI_USER}@${PI_HOST}:${PI_PATH}/backend/static/ \
+        --rsync-path="sudo rsync" || true
+    echo "✅ UI files synced!"
+fi
 
 # Sync only app code (faster than full sync)
 echo "📦 Syncing code files..."

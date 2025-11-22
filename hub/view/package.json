@@ -6,6 +6,8 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
+		"watch": "vite build --watch",
+		"watch:dev": "chokidar 'src/**/*' 'static/**/*' -c 'npm run build && cd ../../backend && docker-compose restart flask 2>/dev/null || true' --initial --ignore 'node_modules/**' --ignore '.svelte-kit/**'",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
@@ -20,6 +22,7 @@
 		"@sveltejs/adapter-static": "^3.0.8",
 		"@sveltejs/kit": "^2.16.0",
 		"@sveltejs/vite-plugin-svelte": "^5.0.0",
+		"chokidar-cli": "^3.0.0",
 		"eslint": "^9.18.0",
 		"eslint-config-prettier": "^10.0.1",
 		"eslint-plugin-svelte": "^2.46.1",
