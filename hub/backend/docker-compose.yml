@@ -16,6 +16,7 @@ services:
     volumes:
       - ./app:/app
       - ./migrations:/app/migrations
+      - ./static:/app/static
     working_dir: /app
     networks:
       - growery-net

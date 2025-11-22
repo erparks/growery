@@ -22,6 +22,9 @@ COPY app/ .
 # Note: Adjust based on your actual project structure
 COPY migrations/ ./migrations/
 
+# Copy static files (built frontend UI)
+COPY static/ ./static/
+
 # Copy and set up entrypoint scripts
 COPY docker/app/entrypoint.sh /entrypoint.sh
 COPY docker/app/entrypoint-dev.sh /entrypoint-dev.sh
