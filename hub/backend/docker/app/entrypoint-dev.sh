@@ -23,5 +23,5 @@ flask db upgrade
 echo "Starting Flask application in development mode with auto-reload..."
 # Use Flask's built-in development server with reloader enabled
 # This will watch for file changes and automatically restart the server
-exec flask run --host=0.0.0.0 --port=5000 --reload --debugger
+exec flask run --host=0.0.0.0 --port=80 --reload --debugger
 

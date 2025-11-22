@@ -140,4 +140,4 @@ ssh ${PI_USER}@${PI_HOST} << 'DEPLOY_EOF'
     sudo $DOCKER_COMPOSE logs --tail=20
 DEPLOY_EOF
 
-echo "🎉 Deployment finished! Your app should be running on http://${PI_HOST}:5000"
+echo "🎉 Deployment finished! Your app should be running on http://${PI_HOST}"
