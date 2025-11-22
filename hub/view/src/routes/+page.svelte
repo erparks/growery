@@ -1,5 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 
 	import PlantCard from '$lib/components/PlantCard.svelte';
 	import ControlsCard from '$lib/components/controls/ControlsCard.svelte';
@@ -14,6 +15,10 @@
 	onMount(async () => {
 		await getPlants();
 	});
+
+	const handleAddPlant = () => {
+		goto('/add-plant');
+	};
 </script>
 
 <main>
@@ -22,14 +27,17 @@
 			<h1 class="app-title">growery</h1>
 		</div>
 
-		<div class="flex-grid">
+		<!-- <div class="flex-grid">
 			<ControlsCard />
-		</div>
+		</div> -->
 
 		<div class="flex-grid">
-			{#each plants as plant}
+			{#each plants.plants as plant}
 				<PlantCard {plant} />
 			{/each}
 		</div>
 	</div>
+	<button class="floating-add-button" on:click={handleAddPlant} aria-label="Add new plant">
+		+
+	</button>
 </main>

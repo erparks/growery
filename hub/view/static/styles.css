@@ -45,7 +45,7 @@
 
 .card {
     flex: 1 1 300px;
-    border: 1px solid #ddd;
+    border: 1px solid rgba(0, 255, 136, 0.5);
     padding: 1rem;
     text-align: center;
     border-radius: 8px;
@@ -124,4 +124,36 @@ body {
     background: #00ff00;
     color: black;
     box-shadow: 0 0 20px #00ff00;
+}
+
+.floating-add-button {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.8);
+    border: 2px solid #00ff00;
+    color: #00ff00;
+    font-size: 2rem;
+    font-family: 'IBM Plex Mono', monospace;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.floating-add-button:hover {
+    background-color: #00ff00;
+    color: black;
+    box-shadow: 0 0 25px #00ff00;
+    transform: scale(1.1);
+}
+
+.floating-add-button:active {
+    transform: scale(0.95);
 }
