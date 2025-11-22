@@ -1,6 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
+	import { goto } from '$app/navigation';
 	import PhotoHistories from '$lib/components/PhotoHistories.svelte';
 
 	let plant = null;
@@ -84,17 +85,19 @@
 
 <main>
 	<div class="container column">
+		<div class="container">
+			<h1 class="app-title clickable" on:click={() => goto('/')}>growery</h1>
+		</div>
+
 		{#if loading}
 			<div class="loading">Loading plant data...</div>
 		{:else if error}
 			<div class="error">{error}</div>
 		{:else if plant}
 			<div class="plant-detail">
-				<h1 class="app-title">{plant.nickname}</h1>
-
 				<!-- Plant Information Table -->
 				<section class="card">
-					<h2>Plant Information</h2>
+					<h2>{plant.nickname}</h2>
 					<table class="info-table">
 						<tbody>
 							<tr>
@@ -174,5 +177,9 @@
 
 	.error {
 		color: #ff4444;
+	}
+
+	.clickable {
+		cursor: pointer;
 	}
 </style>
