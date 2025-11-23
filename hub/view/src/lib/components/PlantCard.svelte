@@ -30,23 +30,36 @@
 	});
 </script>
 
-<div class="card">
-	<a href={`/plant_detail/?plant_id=${plant['id']}`}>
-		<div class="card-content">
-			<div class="card-text">
-				<h3>{plant['nickname']}</h3>
-				<span class="text-small">({plant['species']})</span>
-			</div>
-			{#if !loading && imageUrl}
-				<div class="card-image">
-					<img src={imageUrl} alt={`${plant['nickname']} photo`} />
-				</div>
-			{/if}
+<a href={`/plant_detail/?plant_id=${plant['id']}`} class="card card-link">
+	<div class="card-content">
+		<div class="card-text">
+			<h3>{plant['nickname']}</h3>
+			<span class="text-small">({plant['species']})</span>
 		</div>
-	</a>
-</div>
+		{#if !loading && imageUrl}
+			<div class="card-image">
+				<img src={imageUrl} alt={`${plant['nickname']} photo`} />
+			</div>
+		{/if}
+	</div>
+</a>
 
 <style>
+	.card-link {
+		text-decoration: none;
+		color: inherit;
+		display: block;
+		width: 100%;
+		transition:
+			transform 0.2s ease,
+			box-shadow 0.2s ease;
+	}
+
+	.card-link:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3);
+	}
+
 	.card-content {
 		display: flex;
 		align-items: center;

@@ -7,6 +7,7 @@
 	let displayedCount = $state(5);
 	let loading = $state(false);
 	let groupPhotosByDate = $state([]);
+	let enlargedImage = $state(null);
 
 	const loadMore = () => {
 		displayedCount += 10;
@@ -83,6 +84,18 @@
 		return `/api/plants/${plantId}/photo_histories/${photoHistory.id}`;
 	};
 
+	const openEnlarged = (photoHistory) => {
+		enlargedImage = photoHistory;
+		// Prevent body scroll when modal is open
+		document.body.style.overflow = 'hidden';
+	};
+
+	const closeEnlarged = () => {
+		enlargedImage = null;
+		// Restore body scroll
+		document.body.style.overflow = '';
+	};
+
 	const formatDate = (dateString) => {
 		if (!dateString) return 'N/A';
 		const date = new Date(dateString);
@@ -142,11 +155,23 @@
 					</div>
 					<div class="photos-grid">
 						{#each dateGroup.photos as photoHistory}
-							<div class="photo-item">
+							<div
+								class="photo-item"
+								role="button"
+								tabindex="0"
+								onclick={() => openEnlarged(photoHistory)}
+								onkeydown={(e) => {
+									if (e.key === 'Enter' || e.key === ' ') {
+										e.preventDefault();
+										openEnlarged(photoHistory);
+									}
+								}}
+							>
 								<img
 									src={getImageUrl(photoHistory)}
 									alt="Plant photo from {formatDate(photoHistory.created_at)}"
 									loading="lazy"
+									class="clickable-image"
 								/>
 								<div class="photo-meta">
 									<span class="photo-date">{formatDate(photoHistory.created_at)}</span>
@@ -166,6 +191,42 @@
 		{/if}
 	{/if}
 </section>
+
+<!-- Enlarged Image Modal -->
+{#if enlargedImage}
+	<div
+		class="image-modal"
+		role="dialog"
+		aria-modal="true"
+		aria-label="Enlarged image view"
+		onclick={closeEnlarged}
+		onkeydown={(e) => {
+			if (e.key === 'Escape') {
+				closeEnlarged();
+			}
+		}}
+		tabindex="-1"
+	>
+		<div
+			class="modal-content"
+			role="document"
+			onclick={(e) => e.stopPropagation()}
+			onkeydown={(e) => e.stopPropagation()}
+		>
+			<button class="close-button" onclick={closeEnlarged} aria-label="Close enlarged image"
+				>×</button
+			>
+			<img
+				src={getImageUrl(enlargedImage)}
+				alt="Plant photo from {formatDate(enlargedImage.created_at)}"
+				class="enlarged-image"
+			/>
+			<div class="modal-meta">
+				<span class="modal-date">{formatDate(enlargedImage.created_at)}</span>
+			</div>
+		</div>
+	</div>
+{/if}
 
 <style>
 	.card {
@@ -229,11 +290,19 @@
 		transition:
 			transform 0.2s ease,
 			box-shadow 0.2s ease;
+		cursor: pointer;
+		outline: none;
 	}
 
-	.photo-item:hover {
+	.photo-item:hover,
+	.photo-item:focus {
 		transform: translateY(-4px);
 		box-shadow: 0 4px 12px rgba(0, 255, 136, 0.4);
+	}
+
+	.photo-item:focus-visible {
+		outline: 2px solid #00ff88;
+		outline-offset: 2px;
 	}
 
 	.photo-item img {
@@ -241,6 +310,15 @@
 		height: 200px;
 		object-fit: cover;
 		display: block;
+	}
+
+	.clickable-image {
+		cursor: pointer;
+		transition: opacity 0.2s ease;
+	}
+
+	.clickable-image:hover {
+		opacity: 0.9;
 	}
 
 	.photo-meta {
@@ -295,5 +373,78 @@
 		.photos-grid {
 			grid-template-columns: 1fr;
 		}
+	}
+
+	.image-modal {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background-color: rgba(0, 0, 0, 0.9);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 1000;
+		padding: 2rem;
+		cursor: pointer;
+	}
+
+	.modal-content {
+		position: relative;
+		max-width: 90vw;
+		max-height: 90vh;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		cursor: default;
+	}
+
+	.close-button {
+		position: absolute;
+		top: -2.5rem;
+		right: 0;
+		background: rgba(0, 0, 0, 0.8);
+		border: 2px solid rgba(0, 255, 136, 0.5);
+		color: #00ff88;
+		font-size: 2rem;
+		width: 40px;
+		height: 40px;
+		border-radius: 50%;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: all 0.2s ease;
+		font-family: 'IBM Plex Mono', monospace;
+		line-height: 1;
+		padding: 0;
+	}
+
+	.close-button:hover {
+		background: rgba(0, 255, 136, 0.2);
+		border-color: #00ff88;
+		transform: scale(1.1);
+	}
+
+	.enlarged-image {
+		max-width: 100%;
+		max-height: 85vh;
+		object-fit: contain;
+		border-radius: 8px;
+		box-shadow: 0 4px 20px rgba(0, 255, 136, 0.3);
+	}
+
+	.modal-meta {
+		margin-top: 1rem;
+		padding: 0.75rem;
+		background-color: rgba(0, 0, 0, 0.7);
+		border-radius: 8px;
+		border: 1px solid rgba(0, 255, 136, 0.3);
+	}
+
+	.modal-date {
+		font-size: 1rem;
+		color: #00ff88;
 	}
 </style>
