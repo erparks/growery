@@ -1,28 +1,71 @@
 <script>
 	import { goto } from '$app/navigation';
+	import exifr from 'exifr';
 
 	let nickname = '';
 	let species = '';
 	let imageFile = null;
 	let imagePreview = null;
+	let imageDate = null;
 	let submitting = false;
 	let error = '';
 
-	const handleImageChange = (e) => {
+	const extractImageDate = async (file) => {
+		try {
+			const exifData = await exifr.parse(file, {
+				pick: ['DateTimeOriginal', 'CreateDate', 'DateCreated', 'DateTime', 'ModifyDate'],
+				translateKeys: false,
+				translateValues: false,
+				reviveValues: true
+			});
+
+			if (!exifData) {
+				return null;
+			}
+
+			// Try date fields in priority order
+			const dateFields = [
+				'DateTimeOriginal',
+				'CreateDate',
+				'DateCreated',
+				'DateTime',
+				'ModifyDate'
+			];
+
+			for (const field of dateFields) {
+				if (exifData[field]) {
+					const date = new Date(exifData[field]);
+					if (!isNaN(date.getTime())) {
+						return date;
+					}
+				}
+			}
+		} catch (err) {
+			// Silently fail - will use current date as fallback
+		}
+		return null;
+	};
+
+	const handleImageChange = async (e) => {
 		const file = e.target.files[0];
 		if (file) {
 			// Validate file type
 			const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'];
+
 			if (!allowedTypes.includes(file.type)) {
 				error = 'Invalid file type. Please select a PNG, JPG, GIF, or WEBP image.';
 				e.target.value = '';
 				imageFile = null;
 				imagePreview = null;
+				imageDate = null;
 				return;
 			}
 
 			imageFile = file;
 			error = '';
+
+			// Extract date from EXIF metadata
+			imageDate = await extractImageDate(file);
 
 			// Create preview
 			const reader = new FileReader();
@@ -33,6 +76,7 @@
 		} else {
 			imageFile = null;
 			imagePreview = null;
+			imageDate = null;
 		}
 	};
 
@@ -67,6 +111,10 @@
 			if (imageFile && newPlant.id) {
 				const formData = new FormData();
 				formData.append('image', imageFile);
+				// Include date if we extracted it from EXIF
+				if (imageDate) {
+					formData.append('date', imageDate.toISOString());
+				}
 
 				const imageResponse = await fetch(`/api/plants/${newPlant.id}/photo_histories`, {
 					method: 'POST',
@@ -97,6 +145,7 @@
 	const removeImage = () => {
 		imageFile = null;
 		imagePreview = null;
+		imageDate = null;
 		// Reset the file input
 		const fileInput = document.getElementById('image');
 		if (fileInput) {

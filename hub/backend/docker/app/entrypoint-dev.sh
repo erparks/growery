@@ -20,8 +20,8 @@ export FLASK_DEBUG=1
 echo "Running database migrations..."
 flask db upgrade
 
-echo "Starting Flask application in development mode with auto-reload..."
-# Use Flask's built-in development server with reloader enabled
-# This will watch for file changes and automatically restart the server
-exec flask run --host=0.0.0.0 --port=80 --reload --debugger
+echo "Starting Flask application in development mode..."
+# Flask's built-in reloader doesn't work reliably with Docker volume mounts
+# Use the host-based watcher (watch_and_restart.sh) instead for auto-reload
+flask run --host=0.0.0.0 --port=80 --debugger
 

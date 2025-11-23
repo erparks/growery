@@ -9,7 +9,10 @@ services:
       FLASK_ENV: development
       FLASK_DEBUG: "1"
     # Override entrypoint for dev mode with auto-reload
-    entrypoint: ["/entrypoint-dev.sh"]
+    entrypoint: [ "/entrypoint-dev.sh" ]
     # Enable stdin and tty for better output
     stdin_open: true
     tty: true
+    # Override restart policy for dev mode - don't auto-restart on failure
+    # This prevents containers from silently restarting when they crash
+    restart: "no"
