@@ -8,6 +8,9 @@
 	let loading = $state(false);
 	let groupPhotosByDate = $state([]);
 	let enlargedImage = $state(null);
+	let uploading = $state(false);
+	let uploadProgress = $state('');
+	let fileInput = null;
 
 	const loadMore = () => {
 		displayedCount += 10;
@@ -137,10 +140,80 @@
 
 		return `${formattedDate} (${timeAgo})`;
 	};
+
+	const handleFileSelect = async (event) => {
+		const files = Array.from(event.target.files || []);
+		if (files.length === 0) return;
+
+		uploading = true;
+		uploadProgress = '';
+
+		try {
+			for (let i = 0; i < files.length; i++) {
+				const file = files[i];
+				uploadProgress = `Uploading ${i + 1} of ${files.length}: ${file.name}`;
+
+				const formData = new FormData();
+				formData.append('image', file);
+
+				const response = await fetch(`/api/plants/${plantId}/photo_histories`, {
+					method: 'POST',
+					body: formData
+				});
+
+				if (!response.ok) {
+					const error = await response.json();
+					throw new Error(error.error || `Failed to upload ${file.name}`);
+				}
+			}
+
+			uploadProgress = 'Upload complete!';
+
+			// Refresh the photo list
+			await fetchAllPhotos();
+
+			// Clear the file input
+			if (fileInput) {
+				fileInput.value = '';
+			}
+
+			// Clear progress message after a short delay
+			setTimeout(() => {
+				uploadProgress = '';
+			}, 2000);
+		} catch (error) {
+			uploadProgress = `Error: ${error.message}`;
+			console.error('Upload error:', error);
+		} finally {
+			uploading = false;
+		}
+	};
+
+	const triggerFileInput = () => {
+		if (fileInput) {
+			fileInput.click();
+		}
+	};
 </script>
 
 <section class="card">
-	<h2>Images</h2>
+	<div class="card-header">
+		<h2>Images</h2>
+		<button class="upload-btn" onclick={triggerFileInput} disabled={uploading}>
+			{uploading ? 'Uploading...' : 'Upload Images'}
+		</button>
+		<input
+			type="file"
+			accept="image/*"
+			multiple
+			bind:this={fileInput}
+			onchange={handleFileSelect}
+			style="display: none;"
+		/>
+	</div>
+	{#if uploadProgress}
+		<div class="upload-progress">{uploadProgress}</div>
+	{/if}
 	{#if loading && allPhotoHistories.length === 0}
 		<p class="no-photos">Loading photos...</p>
 	{:else if allPhotoHistories.length === 0}
@@ -234,10 +307,55 @@
 		text-align: left;
 	}
 
+	.card-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 1rem;
+		gap: 1rem;
+		flex-wrap: wrap;
+	}
+
 	.card h2 {
 		color: #00ff00;
-		margin-bottom: 1rem;
+		margin: 0;
 		font-size: 1.5rem;
+	}
+
+	.upload-btn {
+		background-color: rgba(0, 255, 136, 0.2);
+		border: 1px solid rgba(0, 255, 136, 0.5);
+		color: #00ff88;
+		padding: 0.5rem 1.5rem;
+		border-radius: 8px;
+		font-size: 0.9rem;
+		cursor: pointer;
+		transition:
+			background-color 0.2s ease,
+			border-color 0.2s ease,
+			transform 0.2s ease;
+		font-family: inherit;
+	}
+
+	.upload-btn:hover:not(:disabled) {
+		background-color: rgba(0, 255, 136, 0.3);
+		border-color: rgba(0, 255, 136, 0.7);
+		transform: translateY(-2px);
+	}
+
+	.upload-btn:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	.upload-progress {
+		padding: 0.75rem 1rem;
+		background-color: rgba(0, 255, 136, 0.1);
+		border: 1px solid rgba(0, 255, 136, 0.3);
+		border-radius: 8px;
+		color: #00ff88;
+		margin-bottom: 1rem;
+		font-size: 0.9rem;
 	}
 
 	.photos-container {
