@@ -1,4 +1,4 @@
-from database import db
+from app.database import db
 from datetime import datetime, timezone
 
 class PhotoHistory(db.Model):

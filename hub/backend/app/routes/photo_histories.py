@@ -1,163 +1,79 @@
-from flask import Blueprint, jsonify, request, send_file
-from database import db
-from models.photo_histories import PhotoHistory
-from models.plants import Plants
-import os
-import uuid
-import mimetypes
-from datetime import datetime, timezone
-
-
-try:
-    import piexif
-except ImportError:
-    piexif = None
+from flask import Blueprint, jsonify, request, send_file, Response
+from typing import Tuple
+from app.services.photo_history_service import PhotoHistoryService
 
 photo_histories_bp = Blueprint("photo_histories", __name__)
-
-def extract_date_from_file(file_path):
-    """Extract date from EXIF metadata in the image file.
-    
-    Returns:
-        datetime: Extracted date in UTC, or current time if extraction fails.
-    """
-    if not piexif:
-        return datetime.now(timezone.utc)
-    
-    try:
-        exif_dict = piexif.load(file_path)
-        
-        # Priority order for date fields
-        date_fields = [
-            (piexif.ExifIFD.DateTimeOriginal, 'Exif'),
-            (piexif.ImageIFD.DateTime, '0th'),
-            (piexif.ExifIFD.DateTimeDigitized, 'Exif'),
-        ]
-        
-        for field_tag, exif_section in date_fields:
-            if exif_section not in exif_dict or field_tag not in exif_dict[exif_section]:
-                continue
-                
-            date_str = exif_dict[exif_section][field_tag]
-            if isinstance(date_str, bytes):
-                date_str = date_str.decode('utf-8')
-            
-            try:
-                # EXIF date format: "YYYY:MM:DD HH:MM:SS"
-                date_obj = datetime.strptime(date_str, '%Y:%m:%d %H:%M:%S')
-                return date_obj.replace(tzinfo=timezone.utc)
-            except (ValueError, TypeError):
-                continue
-    except Exception:
-        pass
-    
-    return datetime.now(timezone.utc)
+photo_history_service = PhotoHistoryService()
 
 @photo_histories_bp.route("/<int:plant_id>/photo_histories", methods=["POST"])
-def add_photo_history(plant_id):
-    # Check if plant exists
-    plant = Plants.query.get(plant_id)
-    if not plant:
-        return jsonify({"error": "plant not found"}), 404
+def add_photo_history(plant_id: int) -> Tuple[Response, int]:
+    """Add a photo history entry for a plant.
     
-    # Check if file is present in request
+    Args:
+        plant_id: The ID of the plant.
+    
+    Request form must contain:
+        - image (file): The image file to upload
+        - date (str, optional): ISO format date string
+    
+    Returns:
+        JSON response with photo history data or error message.
+    """
+    # Input validation
     if 'image' not in request.files:
         return jsonify({"error": "no image file provided"}), 400
     
     file = request.files['image']
+    date_str = request.form.get('date')
     
-    # Check if file is actually selected
-    if file.filename == '':
-        return jsonify({"error": "no file selected"}), 400
+    # Validate date format if provided
+    if date_str and not isinstance(date_str, str):
+        return jsonify({"error": "date must be a string"}), 400
     
-    # Validate file extension
-    allowed_extensions = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
-    if '.' not in file.filename:
-        return jsonify({"error": "invalid file type"}), 400
+    result, error, status_code = photo_history_service.create_photo_history(
+        plant_id, file, date_str
+    )
     
-    file_extension = file.filename.rsplit('.', 1)[1].lower()
-    if file_extension not in allowed_extensions:
-        return jsonify({
-            "error": "invalid file type",
-            "allowed": list(allowed_extensions)
-        }), 400
+    if error:
+        return jsonify(error), status_code
     
-    # Create histories directory if it doesn't exist
-    backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    histories_dir = os.path.join(backend_dir, 'histories')
-    os.makedirs(histories_dir, exist_ok=True)
-    
-    # Generate unique filename
-    unique_filename = f"{uuid.uuid4().hex}.{file_extension}"
-    file_path = os.path.join(histories_dir, unique_filename)
-    
-    # Save the file
-    file.save(file_path)
-    
-    # Store relative path in database (relative to backend directory)
-    relative_path = os.path.join('histories', unique_filename)
-    
-    # Get date from request if provided, otherwise extract from EXIF
-    if 'date' in request.form:
-        try:
-            date_str = request.form['date'].replace('Z', '+00:00')
-            created_at = datetime.fromisoformat(date_str)
-            if created_at.tzinfo is None:
-                created_at = created_at.replace(tzinfo=timezone.utc)
-            else:
-                created_at = created_at.astimezone(timezone.utc)
-        except (ValueError, TypeError):
-            created_at = extract_date_from_file(file_path)
-    else:
-        created_at = extract_date_from_file(file_path)
-    
-    # Create database record with the extracted or current date
-    photo_history = PhotoHistory(plant_id=plant_id, image_location=relative_path, created_at=created_at)
-    db.session.add(photo_history)
-    db.session.commit()
-    
-    return jsonify(photo_history.to_dict()), 201
+    return jsonify(result), status_code
 
 
 @photo_histories_bp.route("/<int:plant_id>/photo_histories", methods=["GET"])
-def get_photo_histories(plant_id):
-    plant = Plants.query.get(plant_id)
-    if not plant:
-        return jsonify({"error": "plant not found"}), 404
+def get_photo_histories(plant_id: int) -> Tuple[Response, int]:
+    """Get all photo histories for a plant.
     
-    photo_histories = (
-        PhotoHistory.query
-        .filter_by(plant_id=plant_id)
-        .order_by(PhotoHistory.created_at.desc())
-        .all()
-    )
-    return jsonify([ph.to_dict() for ph in photo_histories]), 200
+    Args:
+        plant_id: The ID of the plant.
+    
+    Returns:
+        JSON response with list of photo histories or error message.
+    """
+    result, error, status_code = photo_history_service.get_photo_histories_by_plant_id(plant_id)
+    
+    if error:
+        return jsonify(error), status_code
+    
+    return jsonify(result), status_code
 
 @photo_histories_bp.route("/<int:plant_id>/photo_histories/<int:id>", methods=["GET"])
-def get_photo_history(plant_id, id):
-    # Check if plant exists
-    plant = Plants.query.get(plant_id)
-    if not plant:
-        return jsonify({"error": "plant not found"}), 404
+def get_photo_history(plant_id: int, id: int) -> Tuple[Response, int]:
+    """Get an image file for a photo history entry.
     
-    # Check if photo history exists and belongs to the plant
-    photo_history = PhotoHistory.query.filter_by(id=id, plant_id=plant_id).first()
-    if not photo_history:
-        return jsonify({"error": "photo history not found"}), 404
+    Args:
+        plant_id: The ID of the plant.
+        id: The ID of the photo history.
     
-    # Construct absolute path to the image file
-    backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    image_path = os.path.join(backend_dir, photo_history.image_location)
+    Returns:
+        Image file or JSON error response.
+    """
+    image_path, mimetype, error, status_code = photo_history_service.get_photo_history_image(
+        plant_id, id
+    )
     
-    # Check if file exists
-    if not os.path.exists(image_path):
-        return jsonify({"error": "image file not found"}), 404
+    if error:
+        return jsonify(error), status_code
     
-    # Determine mimetype
-    mimetype, _ = mimetypes.guess_type(image_path)
-    if not mimetype:
-        mimetype = 'image/jpeg'  # Default to jpeg if cannot determine
-    
-    # Return the image file
     return send_file(image_path, mimetype=mimetype)
 

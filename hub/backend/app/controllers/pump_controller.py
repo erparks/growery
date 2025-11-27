@@ -16,11 +16,11 @@ class PumpController():
         # GPIO.output(_MOTOR_BI, GPIO.LOW)
         # GPIO.output(_MOTOR_FI, GPIO.LOW)
 
-    # def on(self):
-    #     # GPIO.output(_MOTOR_BI, GPIO.HIGH)
-    #     GPIO.output(_MOTOR_FI, GPIO.LOW)
-
-    #     time.sleep(_PUMP_DURATION_SECONDS)
-
-    #     GPIO.output(_MOTOR_BI, GPIO.LOW)
-    #     GPIO.output(_MOTOR_FI, GPIO.LOW)
+    def on(self):
+        """Activate the pump. Currently a stub implementation."""
+        # GPIO.output(_MOTOR_BI, GPIO.HIGH)
+        # GPIO.output(_MOTOR_FI, GPIO.LOW)
+        # time.sleep(_PUMP_DURATION_SECONDS)
+        # GPIO.output(_MOTOR_BI, GPIO.LOW)
+        # GPIO.output(_MOTOR_FI, GPIO.LOW)
+        pass

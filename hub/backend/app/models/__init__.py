@@ -1,17 +1,10 @@
 """
-Models package - automatically imports all models for Alembic migrations.
+Models package - imports all models for Alembic migrations.
 """
-import importlib
-import pkgutil
-from pathlib import Path
+# Import all models explicitly to ensure they're registered with SQLAlchemy
+# Import order matters: import base models before models that reference them
+from app.models.photo_histories import PhotoHistory  # noqa: F401
+from app.models.plants import Plants  # noqa: F401
 
-# Get the directory containing this __init__.py file
-_package_dir = Path(__file__).parent
-
-# Automatically import all modules in this package
-# This ensures all models are registered with SQLAlchemy metadata
-for _, module_name, _ in pkgutil.iter_modules([str(_package_dir)]):
-    # Skip this __init__.py file itself
-    if module_name != '__init__':
-        importlib.import_module(f'.{module_name}', __package__)
+__all__ = ['Plants', 'PhotoHistory']
 
