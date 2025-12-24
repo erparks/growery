@@ -1,0 +1,45 @@
+# Project: Growery
+
+## Project Structure
+- **hub/**: Main control center (monorepo-style)
+  - **backend/**: Python Flask API.
+    - Path: `hub/backend/app`
+    - Entry: `hub/backend/app/main.py`
+  - **view/**: SvelteKit Frontend.
+    - Path: `hub/view`
+    - Config: `hub/view/svelte.config.js`
+  - **system/**: Shell scripts for deployment and maintenance.
+- **plant_controller/**: ESP32/Embedded code using PlatformIO (C++).
+
+## Tech Stack & Conventions
+- **General**:
+  - Adhere strictly to language-specific best practices and standards.
+  - Write clean, idiomatic code (Pythonic, idiomatic ES6+, etc.).
+- **Backend**: 
+  - Python 3.12, Flask, SQLAlchemy.
+  - Database: PostgreSQL (Dockerized).
+  - Formatting: **Strictly follow PEP 8**. Use `black` or `ruff` if available.
+  - Type Hinting: Use Python type hints (`typing`) for all function signatures.
+- **Frontend**: 
+  - SvelteKit (Svelte 5), Vite.
+  - Styling: CSS (standard).
+  - Linting: **Strictly follow ESLint & Prettier** configs.
+  - Code Style: Use modern JavaScript features (ES Modules, async/await).
+- **Embedded** (CURRENTLY UNUSED): 
+  - The `plant_controller/` directory is currently inactive/reference only.
+  - No active development or maintenance is required for this section. Do not analyze or modify unless explicitly asked.
+
+## Development Workflow
+- **Start Dev Stack**: 
+  - `docker-compose -f hub/docker-compose.dev.yml up`
+- **Frontend Dev**: 
+  - `cd hub/view && npm run dev`
+- **Database**:
+  - Run migrations via `alembic` inside the backend container or environment.
+
+## Critical Rules for AI
+1. **Context Awareness**: Always check `hub/backend/app` for API logic and `hub/view/src` for frontend components.
+2. **File Paths**: Use absolute paths or paths relative to the project root (`growery/`) when suggesting edits.
+3. **Docker**: The backend runs in Docker. Changes to requirements need a rebuild.
+4. **Svelte 5**: This project uses Svelte 5. Use Runes (`$state`, `$derived`, `$effect`) instead of legacy stores/reactivity where appropriate, unless maintaining legacy code.
+
