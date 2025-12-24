@@ -73,6 +73,7 @@ rsync -av --delete \
     --exclude='node_modules' \
     --exclude='*.log' \
     --exclude='.env' \
+    --exclude='backend/app/histories' \
     ../ ${PI_USER}@${PI_HOST}:${PI_PATH}/ \
     --rsync-path="sudo rsync"
 

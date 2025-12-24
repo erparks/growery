@@ -12,12 +12,12 @@ echo "Database is ready!"
 
 # Set PYTHONPATH to include current directory so imports work
 export PYTHONPATH=/app:$PYTHONPATH
-# Use app.py which imports the configured app from __init__.py
-export FLASK_APP=app.py
+# Use app.app which imports the configured app from __init__.py
+export FLASK_APP=app.app
 
 echo "Running database migrations..."
 flask db upgrade
 
 echo "Starting Flask application..."
-exec python main.py
+exec python -m app.main
 

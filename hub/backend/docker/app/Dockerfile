@@ -9,23 +9,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Copy requirements first for better layer caching
-COPY app/requirements.txt .
+# Copy requirements
+COPY app/requirements.txt app/requirements.txt
 
 # Install dependencies
-RUN pip install -r requirements.txt
+RUN pip install -r app/requirements.txt
 
-# Copy application code
-COPY app/ .
+# Copy application code to /app/app to maintain package structure
+COPY app/ app/
 
-# Copy migrations directory (if it exists at the backend root level)
-# Note: Adjust based on your actual project structure
-COPY migrations/ ./migrations/
+# Copy migrations directory
+COPY migrations/ migrations/
 
 # Create static directory
-# In dev mode, static files are mounted via volume mount (see docker-compose.yml)
-# For production, static files should be copied after building the UI
-RUN mkdir -p ./static
+RUN mkdir -p static
 
 # Copy and set up entrypoint scripts
 COPY docker/app/entrypoint.sh /entrypoint.sh

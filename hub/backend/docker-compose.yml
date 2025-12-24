@@ -14,7 +14,7 @@ services:
       db:
         condition: service_healthy
     volumes:
-      - ./app:/app
+      - ./app:/app/app
       - ./migrations:/app/migrations
       - ./static:/app/static
     working_dir: /app

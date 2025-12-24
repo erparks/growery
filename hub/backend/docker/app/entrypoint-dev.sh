@@ -12,8 +12,8 @@ echo "Database is ready!"
 
 # Set PYTHONPATH to include current directory so imports work
 export PYTHONPATH=/app:$PYTHONPATH
-# Use app.py which imports the configured app from __init__.py
-export FLASK_APP=app.py
+# Use app.app which imports the configured app from __init__.py
+export FLASK_APP=app.app
 export FLASK_ENV=development
 export FLASK_DEBUG=1
 
