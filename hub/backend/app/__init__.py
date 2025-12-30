@@ -3,9 +3,10 @@ from flask import Flask, request, jsonify
 from app.database import db, migrate
 from app.config import Config
 # Import models to ensure they're registered with SQLAlchemy for migrations
-from app.models import Plants, PhotoHistory  # noqa: F401
+from app.models import Plants, PhotoHistory, Note  # noqa: F401
 from app.routes.plants import plants_bp
 from app.routes.photo_histories import photo_histories_bp
+from app.routes.notes import notes_bp
 from app.routes.static import static_bp
 from app.routes.controls import controls_bp
 from flask_cors import CORS
@@ -32,6 +33,7 @@ def create_app(config_class=Config):
     # Register photo_histories first so more specific routes are matched before generic plant routes
     app.register_blueprint(photo_histories_bp, url_prefix="/api/plants")
     app.register_blueprint(plants_bp, url_prefix="/api/plants")
+    app.register_blueprint(notes_bp, url_prefix="/api")
     app.register_blueprint(controls_bp, url_prefix="/api/pumps")
     app.register_blueprint(static_bp, url_prefix="/")
 

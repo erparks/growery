@@ -5,6 +5,7 @@ Models package - imports all models for Alembic migrations.
 # Import order matters: import base models before models that reference them
 from app.models.photo_histories import PhotoHistory  # noqa: F401
 from app.models.plants import Plants  # noqa: F401
+from app.models.notes import Note  # noqa: F401
 
-__all__ = ['Plants', 'PhotoHistory']
+__all__ = ["Plants", "PhotoHistory", "Note"]
 
