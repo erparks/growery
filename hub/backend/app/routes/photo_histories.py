@@ -77,3 +77,24 @@ def get_photo_history(plant_id: int, id: int) -> Tuple[Response, int]:
     
     return send_file(image_path, mimetype=mimetype)
 
+
+@photo_histories_bp.route("/<int:plant_id>/photo_histories/<int:id>", methods=["DELETE"])
+def delete_photo_history(plant_id: int, id: int) -> Tuple[Response, int]:
+    """Delete a photo history entry.
+    
+    Args:
+        plant_id: The ID of the plant.
+        id: The ID of the photo history.
+    
+    Returns:
+        JSON response with success message or error.
+    """
+    result, error, status_code = photo_history_service.delete_photo_history(
+        plant_id, id
+    )
+    
+    if error:
+        return jsonify(error), status_code
+    
+    return jsonify(result), status_code
+

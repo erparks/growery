@@ -18,6 +18,12 @@ try:
 except ImportError:
     piexif = None
 
+try:
+    from PIL import Image
+except ImportError:
+    Image = None
+    logger.error("PIL (Pillow) not found. Image compression will be disabled.")
+
 
 class PhotoHistoryService:
     """Service class for photo history operations."""
@@ -127,6 +133,74 @@ class PhotoHistoryService:
         return is_valid, file_extension
     
     @staticmethod
+    def _compress_image(file_path: str, target_size_kb: int = 500) -> None:
+        """Compress image to be under target size.
+        
+        Args:
+            file_path: Path to the image file.
+            target_size_kb: Target size in KB.
+        """
+        if not Image:
+            return
+
+        try:
+            file_size = os.path.getsize(file_path)
+            target_size_bytes = target_size_kb * 1024
+            
+            if file_size <= target_size_bytes:
+                return
+
+            with Image.open(file_path) as img:
+                # Convert to RGB if necessary (e.g. for PNG to JPEG conversion)
+                if img.mode in ('RGBA', 'P'):
+                    img = img.convert('RGB')
+                    
+                # Iterative compression settings
+                quality = 85
+                min_quality = 20
+                step = 10
+                
+                temp_path = file_path + ".temp"
+                
+                # First attempt with standard optimization
+                save_kwargs = {'quality': quality, 'optimize': True}
+                if 'exif' in img.info:
+                    save_kwargs['exif'] = img.info['exif']
+                    
+                img.save(temp_path, format='JPEG', **save_kwargs)
+                
+                # If still too big, iterate down quality
+                while os.path.getsize(temp_path) > target_size_bytes and quality > min_quality:
+                    quality -= step
+                    save_kwargs['quality'] = quality
+                    img.save(temp_path, format='JPEG', **save_kwargs)
+
+                # If still too big after quality drop, resize
+                if os.path.getsize(temp_path) > target_size_bytes:
+                    # Reset quality for resize
+                    quality = 80
+                    save_kwargs['quality'] = quality
+                    
+                    # Calculate new dimensions maintaining aspect ratio
+                    factor = 0.9
+                    while os.path.getsize(temp_path) > target_size_bytes and factor > 0.1:
+                        width, height = img.size
+                        new_size = (int(width * factor), int(height * factor))
+                        resized_img = img.resize(new_size, Image.Resampling.LANCZOS)
+                        resized_img.save(temp_path, format='JPEG', **save_kwargs)
+                        factor -= 0.1
+
+                # If compressed file is smaller than original, replace
+                temp_size = os.path.getsize(temp_path)
+                if temp_size < file_size:
+                    os.replace(temp_path, file_path)
+                    logger.info(f"Compressed image: {file_size/1024:.1f}KB -> {temp_size/1024:.1f}KB")
+                else:
+                    os.remove(temp_path)
+        except Exception as e:
+            logger.warning(f"Failed to compress image {os.path.basename(file_path)}: {e}", exc_info=True)
+
+    @staticmethod
     def create_photo_history(
         plant_id: int, 
         file: FileStorage, 
@@ -172,6 +246,9 @@ class PhotoHistoryService:
             
             # Save the file
             file.save(file_path)
+
+            # Compress image
+            PhotoHistoryService._compress_image(file_path, target_size_kb=500)
             
             # Store relative path in database (relative to backend directory)
             relative_path = os.path.join(PhotoHistoryService.HISTORIES_DIR_NAME, unique_filename)
@@ -265,4 +342,55 @@ class PhotoHistoryService:
             mimetype = PhotoHistoryService.DEFAULT_MIMETYPE
         
         return image_path, mimetype, None, 200
+
+    @staticmethod
+    def delete_photo_history(
+        plant_id: int, 
+        photo_id: int
+    ) -> Tuple[Optional[Dict[str, Any]], Optional[Dict[str, Any]], int]:
+        """Delete a photo history entry and its associated file.
+        
+        Args:
+            plant_id: The ID of the plant.
+            photo_id: The ID of the photo history.
+            
+        Returns:
+            tuple: (result_dict, error_dict, status_code)
+                   If successful: ({"message": "deleted"}, None, 200)
+                   If error: (None, error_dict, error_code)
+        """
+        # Check if plant exists
+        plant = PlantService.get_plant_model_by_id(plant_id)
+        if not plant:
+            return None, {"error": "plant not found"}, 404
+        
+        # Check if photo history exists and belongs to the plant
+        photo_history = PhotoHistory.query.filter_by(id=photo_id, plant_id=plant_id).first()
+        if not photo_history:
+            return None, {"error": "photo history not found"}, 404
+        
+        try:
+            # Construct absolute path to the image file
+            backend_dir = PhotoHistoryService._get_backend_directory()
+            image_path = os.path.join(backend_dir, photo_history.image_location)
+            
+            # Delete from database first
+            db.session.delete(photo_history)
+            db.session.commit()
+            
+            # Delete file if it exists
+            if os.path.exists(image_path):
+                try:
+                    os.remove(image_path)
+                    logger.info(f"Deleted photo file: {image_path}")
+                except Exception as e:
+                    logger.error(f"Failed to delete file {image_path}: {e}")
+                    # We don't fail the request if file deletion fails, as the DB record is gone
+            
+            return {"message": "Photo history deleted successfully"}, None, 200
+            
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Error deleting photo history {photo_id}: {e}", exc_info=True)
+            return None, {"error": "Failed to delete photo history"}, 500
 
