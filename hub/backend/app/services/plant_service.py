@@ -4,6 +4,7 @@ from typing import Optional, Dict, Any, Tuple, List
 from app.database import db
 from app.models.plants import Plants
 from app.models.photo_histories import PhotoHistory
+from app.models.notes import Note
 from app.exceptions import PlantNotFoundError
 
 logger = logging.getLogger(__name__)
@@ -19,8 +20,71 @@ class PlantService:
         Returns:
             tuple: (list of plant dictionaries, count)
         """
-        plants = Plants.query.all()
-        return [p.to_dict() for p in plants], len(plants)
+        # Sorting requirements (DB-driven where possible):
+        # 1) Plants with incomplete notes that have a due_date come first, sorted by earliest due_date.
+        #    Past-due naturally comes first because earlier timestamps sort first.
+        # 2) Plants without incomplete-due notes are sorted by most recent photo upload (created_at desc).
+        #
+        # Note: "incomplete" is defined as completed_at IS NULL.
+        next_due_subq = (
+            db.session.query(
+                Note.plant_id.label("plant_id"),
+                db.func.min(Note.due_date).label("next_due_date"),
+            )
+            .filter(Note.completed_at.is_(None))
+            .filter(Note.due_date.isnot(None))
+            .group_by(Note.plant_id)
+            .subquery()
+        )
+
+        last_photo_subq = (
+            db.session.query(
+                PhotoHistory.plant_id.label("plant_id"),
+                db.func.max(PhotoHistory.created_at).label("last_photo_at"),
+            )
+            .group_by(PhotoHistory.plant_id)
+            .subquery()
+        )
+
+        incomplete_notes_subq = (
+            db.session.query(
+                Note.plant_id.label("plant_id"),
+                db.func.count(Note.id).label("incomplete_note_count"),
+            )
+            .filter(Note.completed_at.is_(None))
+            .filter(Note.due_date.isnot(None))
+            .group_by(Note.plant_id)
+            .subquery()
+        )
+
+        rows = (
+            db.session.query(
+                Plants,
+                next_due_subq.c.next_due_date,
+                last_photo_subq.c.last_photo_at,
+                incomplete_notes_subq.c.incomplete_note_count,
+            )
+            .outerjoin(next_due_subq, next_due_subq.c.plant_id == Plants.id)
+            .outerjoin(last_photo_subq, last_photo_subq.c.plant_id == Plants.id)
+            .outerjoin(incomplete_notes_subq, incomplete_notes_subq.c.plant_id == Plants.id)
+            .order_by(
+                db.case((next_due_subq.c.next_due_date.is_(None), 1), else_=0),
+                next_due_subq.c.next_due_date.asc(),
+                db.case((last_photo_subq.c.last_photo_at.is_(None), 1), else_=0),
+                last_photo_subq.c.last_photo_at.desc(),
+            )
+            .all()
+        )
+
+        plants: List[Dict[str, Any]] = []
+        for plant, next_due_date, last_photo_at, incomplete_note_count in rows:
+            plant_dict = plant.to_dict()
+            plant_dict["next_due_date"] = next_due_date
+            plant_dict["last_photo_at"] = last_photo_at
+            plant_dict["has_incomplete_notes"] = bool((incomplete_note_count or 0) > 0)
+            plants.append(plant_dict)
+
+        return plants, len(plants)
     
     @staticmethod
     def get_plant_by_id(plant_id: int) -> Optional[Dict[str, Any]]:

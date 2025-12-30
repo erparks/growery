@@ -33,7 +33,14 @@
 <a href={`/plant_detail/?plant_id=${plant['id']}`} class="card card-link">
 	<div class="card-content">
 		<div class="card-text">
-			<h3>{plant['nickname']}</h3>
+			<h3 class="plant-name">
+				{plant['nickname']}
+				{#if plant.has_incomplete_notes}
+					<span class="incomplete-star" aria-label="Has incomplete notes" title="Has incomplete notes"
+						>*</span
+					>
+				{/if}
+			</h3>
 			<span class="text-small">({plant['species']})</span>
 		</div>
 		{#if !loading && imageUrl}
@@ -71,6 +78,18 @@
 	.card-text {
 		flex: 1;
 		text-align: left;
+	}
+
+	.plant-name {
+		display: inline-flex;
+		align-items: baseline;
+		gap: 0.25rem;
+		margin: 0;
+	}
+
+	.incomplete-star {
+		color: #ff4444;
+		font-weight: 900;
 	}
 
 	.card-image {
