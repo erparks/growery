@@ -62,13 +62,32 @@ a {
 
 
 body {
+    /* Tiled broken concrete image background */
+    --bg-overlay: rgba(10, 15, 13, 0.72);
+    --bg-tile-size: 640px;
+
     background-color: #0a0f0d;
+    background-image:
+        /* darken for neon readability */
+        linear-gradient(var(--bg-overlay), var(--bg-overlay)),
+        /* place your texture in hub/view/static/broken-concrete.jpg */
+        url('/broken-concrete.jpg'),
+        /* subtle lighting variation to reduce visible tiling */
+        radial-gradient(circle at 80% 15%, rgba(255, 255, 255, 0.08) 0 220px, transparent 520px),
+        radial-gradient(circle at 10% 90%, rgba(0, 0, 0, 0.12) 0 280px, transparent 620px),
+        /* very light grit */
+        repeating-radial-gradient(circle at 20% 30%, rgba(0, 0, 0, 0.05) 0 1px, transparent 1px 9px);
+    background-size:
+        100% 100%,
+        var(--bg-tile-size) var(--bg-tile-size),
+        100% 100%,
+        100% 100%,
+        160px 160px;
+    background-repeat: no-repeat, repeat, no-repeat, no-repeat, repeat;
+    background-attachment: fixed;
+
     color: #00ff88;
     font-family: 'Source Code Pro', monospace;
-    background-image:
-        linear-gradient(rgba(0, 255, 0, 0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 255, 0, 0.05) 1px, transparent 1px);
-    background-size: 20px 20px;
     padding: 2rem;
 }
 
@@ -79,6 +98,7 @@ body {
     letter-spacing: 2px;
     animation: grow 2s infinite ease-in-out;
     /* Remove gradient & add a neon glow */
+    background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 

@@ -20,10 +20,14 @@ def serve_sveltekit(path):
     # Skip internal routes
     if path.startswith("_app") or path.startswith("api"):
         return abort(404)
-    
-    # Serve CSS and HTML files directly
-    if path.endswith((".css", ".html")):
-        return send_from_directory(STATIC_PATH, path)
-    
+
+    # Serve any real file that exists (images, fonts, css, etc.)
+    # This prevents asset requests like /broken-concrete.jpg from incorrectly
+    # falling back to index.html.
+    requested_path = os.path.join(STATIC_PATH, path)
+    if os.path.isfile(requested_path):
+        mimetype, _ = mimetypes.guess_type(requested_path)
+        return send_from_directory(STATIC_PATH, path, mimetype=mimetype)
+
     # Fallback: serve index.html for all other routes (SPA routing)
     return send_from_directory(STATIC_PATH, "index.html")
