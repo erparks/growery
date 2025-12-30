@@ -99,6 +99,8 @@ def update_note(plant_id: int, note_id: int) -> Tuple[Response, int]:
 
     clear_due_date = data.get("clear_due_date") is True
     clear_photo = data.get("clear_photo") is True
+    clear_completed_at = data.get("clear_completed_at") is True
+    complete = data.get("complete") is True
 
     result, error, status_code = note_service.update_note(
         plant_id=plant_id,
@@ -108,6 +110,8 @@ def update_note(plant_id: int, note_id: int) -> Tuple[Response, int]:
         photo_history_id=data.get("photo_history_id"),
         clear_due_date=clear_due_date,
         clear_photo=clear_photo,
+        clear_completed_at=clear_completed_at,
+        complete=complete,
     )
     if error:
         return jsonify(error), status_code

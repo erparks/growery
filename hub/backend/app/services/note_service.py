@@ -184,6 +184,8 @@ class NoteService:
         photo_history_id: Optional[int] = None,
         clear_due_date: bool = False,
         clear_photo: bool = False,
+        complete: bool = False,
+        clear_completed_at: bool = False,
     ) -> Tuple[Optional[Dict[str, Any]], Optional[Dict[str, Any]], int]:
         plant = PlantService.get_plant_model_by_id(plant_id)
         if not plant:
@@ -215,6 +217,11 @@ class NoteService:
             if not photo:
                 return None, {"error": "photo history not found"}, 404
             note.photo_history_id = photo.id
+
+        if clear_completed_at:
+            note.completed_at = None
+        elif complete is True:
+            note.completed_at = datetime.now(timezone.utc)
 
         try:
             db.session.commit()

@@ -28,6 +28,7 @@ class Note(db.Model):
         onupdate=datetime.now(timezone.utc),
     )
     due_date = db.Column(db.DateTime, nullable=True)
+    completed_at = db.Column(db.DateTime, nullable=True)
 
     def to_dict(self) -> dict:
         return {
@@ -38,6 +39,7 @@ class Note(db.Model):
             "created_at": self.created_at,
             "updated_at": self.updated_at,
             "due_date": self.due_date,
+            "completed_at": self.completed_at,
         }
 
 

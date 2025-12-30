@@ -17,6 +17,7 @@
 	let editingNoteId = $state(null);
 	let editingContent = $state('');
 	let editingDueDateLocal = $state('');
+	let completingNoteId = $state(null);
 
 	const loadMore = () => {
 		displayedCount += 10;
@@ -267,6 +268,39 @@
 		}
 	};
 
+	const completeNote = async (noteId) => {
+		if (completingNoteId) return;
+		completingNoteId = noteId;
+		try {
+			await NoteService.completeNote(plantId, noteId);
+			await fetchTimeline();
+		} catch (err) {
+			console.error('Error completing note:', err);
+			alert('Failed to mark note complete. Please try again.');
+		} finally {
+			completingNoteId = null;
+		}
+	};
+
+	const toggleNoteCompleted = async (note) => {
+		if (!note?.id) return;
+		if (completingNoteId) return;
+		completingNoteId = note.id;
+		try {
+			if (note.completed_at) {
+				await NoteService.uncompleteNote(plantId, note.id);
+			} else {
+				await NoteService.completeNote(plantId, note.id);
+			}
+			await fetchTimeline();
+		} catch (err) {
+			console.error('Error toggling note completion:', err);
+			alert('Failed to update completion. Please try again.');
+		} finally {
+			completingNoteId = null;
+		}
+	};
+
 	const triggerFileInput = () => {
 		if (fileInput) {
 			fileInput.click();
@@ -397,14 +431,25 @@
 												{#each item.notes as note}
 													<div class="note-chip">
 														{#if editingNoteId === note.id}
-															<div class="note-edit">
-																<textarea class="note-textarea" bind:value={editingContent} rows="3"
+															<div
+																class="note-edit"
+																onclick={(e) => e.stopPropagation()}
+																onkeydown={(e) => e.stopPropagation()}
+															>
+																<textarea
+																	class="note-textarea"
+																	bind:value={editingContent}
+																	rows="3"
+																	onclick={(e) => e.stopPropagation()}
+																	onkeydown={(e) => e.stopPropagation()}
 																></textarea>
-																<div class="note-row">
+																<div class="note-row" onclick={(e) => e.stopPropagation()}>
 																	<input
 																		class="note-input"
 																		type="datetime-local"
 																		bind:value={editingDueDateLocal}
+																		onclick={(e) => e.stopPropagation()}
+																		onkeydown={(e) => e.stopPropagation()}
 																	/>
 																	<div class="note-actions">
 																		<button
@@ -429,15 +474,45 @@
 																</div>
 															</div>
 														{:else}
-															<div class="note-view">
+															<div class="note-view" class:completed={!!note.completed_at}>
 																<div class="note-content">{note.content}</div>
 																<div class="note-sub">
-																	<span class="note-time">{formatDate(note.created_at)}</span>
+																	<div class="note-line note-time">
+																		Created: {formatDate(note.created_at)}
+																	</div>
 																	{#if note.due_date}
-																		<span class="note-due">Due: {formatDate(note.due_date)}</span>
+																		<div class="note-line note-due">Due: {formatDate(note.due_date)}</div>
+																	{/if}
+																	{#if note.completed_at}
+																		<div class="note-line note-completed">
+																			Completed: {formatDate(note.completed_at)}
+																		</div>
 																	{/if}
 																</div>
 																<div class="note-actions">
+																	{#if note.due_date}
+																		<button
+																			class="small-btn check-btn"
+																			disabled={completingNoteId === note.id}
+																			aria-label={note.completed_at ? 'Mark note incomplete' : 'Mark note complete'}
+																			title={note.completed_at ? 'Undo complete' : 'Mark complete'}
+																			onclick={(e) => {
+																				e.stopPropagation();
+																				toggleNoteCompleted(note);
+																			}}
+																		>
+																			{#if note.completed_at}
+																				<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+																					<path
+																						fill="currentColor"
+																						d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Zm-8 14-4-4 1.4-1.4L11 14.2l6.6-6.6L19 9l-8 8Z"
+																					/>
+																				</svg>
+																			{:else}
+																				Complete
+																			{/if}
+																		</button>
+																	{/if}
 																	<button
 																		class="small-btn"
 																		onclick={(e) => {
@@ -468,8 +543,28 @@
 							{:else if item.kind === 'note'}
 								<div class="note-item">
 									<div class="note-item-header">
-										<span class="photo-date">{formatDate(item.note.created_at)}</span>
+										<span class="photo-date">Note</span>
 										<div class="note-actions">
+											{#if item.note.due_date}
+												<button
+													class="small-btn check-btn"
+													disabled={completingNoteId === item.note.id}
+													aria-label={item.note.completed_at ? 'Mark note incomplete' : 'Mark note complete'}
+													title={item.note.completed_at ? 'Undo complete' : 'Mark complete'}
+													onclick={() => toggleNoteCompleted(item.note)}
+												>
+													{#if item.note.completed_at}
+														<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+															<path
+																fill="currentColor"
+																d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Zm-8 14-4-4 1.4-1.4L11 14.2l6.6-6.6L19 9l-8 8Z"
+															/>
+														</svg>
+													{:else}
+														Complete
+													{/if}
+												</button>
+											{/if}
 											<button class="small-btn" onclick={() => startEditingNote(item.note)}
 												>Edit</button
 											>
@@ -494,10 +589,22 @@
 											</div>
 										</div>
 									{:else}
-										<div class="note-content">{item.note.content}</div>
-										{#if item.note.due_date}
-											<div class="note-sub">Due: {formatDate(item.note.due_date)}</div>
-										{/if}
+										<div class="note-content" class:completed={!!item.note.completed_at}>
+											{item.note.content}
+										</div>
+										<div class="note-sub">
+											<div class="note-line note-time">
+												Created: {formatDate(item.note.created_at)}
+											</div>
+											{#if item.note.due_date}
+												<div class="note-line note-due">Due: {formatDate(item.note.due_date)}</div>
+											{/if}
+											{#if item.note.completed_at}
+												<div class="note-line note-completed">
+													Completed: {formatDate(item.note.completed_at)}
+												</div>
+											{/if}
+										</div>
 									{/if}
 								</div>
 							{/if}
@@ -770,10 +877,31 @@
 		background-color: rgba(0, 255, 136, 0.25);
 	}
 
+	.small-btn:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+	}
+
 	.small-btn.danger {
 		border-color: rgba(255, 68, 68, 0.6);
 		color: #ff6666;
 		background-color: rgba(255, 68, 68, 0.1);
+	}
+
+	.small-btn.check-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.note-view.completed .note-content,
+	.note-content.completed {
+		text-decoration: line-through;
+		opacity: 0.75;
+	}
+
+	.note-completed {
+		color: rgba(0, 255, 136, 0.95);
 	}
 
 	.notes-list {
@@ -807,10 +935,14 @@
 
 	.note-sub {
 		display: flex;
-		flex-wrap: wrap;
-		gap: 0.5rem;
+		flex-direction: column;
+		gap: 0.25rem;
 		color: rgba(0, 255, 136, 0.85);
 		font-size: 0.8rem;
+	}
+
+	.note-line {
+		line-height: 1.2;
 	}
 
 	.note-actions {
@@ -823,6 +955,8 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
+		width: 100%;
+		max-width: 100%;
 	}
 
 	.note-item {
@@ -848,6 +982,8 @@
 		gap: 1rem;
 		align-items: flex-end;
 		flex-wrap: wrap;
+		width: 100%;
+		max-width: 100%;
 	}
 
 	.note-input,
@@ -858,11 +994,19 @@
 		color: #00ff00;
 		padding: 0.5rem 0.75rem;
 		font-family: inherit;
+		box-sizing: border-box;
+		max-width: 100%;
 	}
 
 	.note-textarea {
 		width: 100%;
 		resize: vertical;
+	}
+
+	.note-input {
+		width: 100%;
+		min-width: 0;
+		flex: 1 1 220px;
 	}
 
 	.photo-date {

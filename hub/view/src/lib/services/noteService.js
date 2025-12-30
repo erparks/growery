@@ -102,6 +102,22 @@ export const NoteService = {
 		});
 	},
 
+	completeNote(plantId, noteId) {
+		return requestJson(`/api/plants/${plantId}/notes/${noteId}`, {
+			method: 'PATCH',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ complete: true })
+		});
+	},
+
+	uncompleteNote(plantId, noteId) {
+		return requestJson(`/api/plants/${plantId}/notes/${noteId}`, {
+			method: 'PATCH',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ clear_completed_at: true })
+		});
+	},
+
 	deleteNote(plantId, noteId) {
 		return requestJson(`/api/plants/${plantId}/notes/${noteId}`, {
 			method: 'DELETE'
