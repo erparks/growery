@@ -1,174 +1,65 @@
-# Deployment Guide for Raspberry Pi
+# Raspberry Pi deployment (`hub/system`)
 
-This guide explains how to deploy the dockerized Growery application to your Raspberry Pi.
+This folder contains two scripts for deploying and operating the dockerized Growery stack on a Raspberry Pi from your development machine.
 
 ## Prerequisites
 
-1. **SSH Access**: Your Pi should be accessible via SSH at `user@hub.local`
-2. **Network**: Your development machine and Pi should be on the same network
+1. **SSH**: The Pi is reachable via SSH (see `PI_USER` and `PI_HOST` at the top of each script; they default to `ethan@hub.local`).
+2. **Network**: Your dev machine and the Pi are on the same network.
+3. **On the Pi**: Docker and Docker Compose are installed, your user can run Docker (e.g. in the `docker` group), and the deploy target path exists (the scripts use `/hub` on the Pi).
 
-## Initial Setup (One-time)
+## `deploy.sh`
 
-### On Your Raspberry Pi
+Full sync and container rebuild. Use for initial deployment and whenever the image or synced tree must change—not only app code (e.g. `requirements.txt`, Dockerfile, `docker-compose.yml`, frontend, or static assets).
 
-1. **Copy the setup script to your Pi:**
-   ```bash
-   scp hub/system/setup_pi.sh user@hub.local:/tmp/
-   ```
-
-2. **SSH into your Pi and run the setup:**
-   ```bash
-   ssh user@hub.local
-   sudo bash /tmp/setup_pi.sh
-   ```
-
-   This will:
-   - Install Docker
-   - Install Docker Compose
-   - Create the `/hub` directory
-   - Add your user to the docker group
-
-3. **Log out and back in** (or run `newgrp docker`) to apply group changes
-
-## Deploying Your Application
-
-### From Your Development Machine
-
-You have two deployment options:
-
-#### Full Deploy (`deploy.sh`)
-Use this for:
-- Initial deployment
-- When dependencies change (`requirements.txt`)
-- When Dockerfile changes
-- When `docker-compose.yml` changes
+From the repo:
 
 ```bash
 cd hub/system
 ./deploy.sh
 ```
 
-This script will:
-1. Sync all necessary files to `/hub` on your Pi (excluding venv, cache files, etc.)
-2. Stop any existing containers
-3. Build and start the Docker containers
-4. Show you the container status and recent logs
+What it does:
 
-#### Quick Deploy (`deploy-quick.sh`)
-Use this for:
-- **Python code changes only** (controllers, routes, models, etc.)
-- Faster deployment (no rebuild needed)
+1. **Builds the Svelte UI** under `hub/view` (`npm install` if `node_modules` is missing, then `npm run build`), producing assets in `hub/backend/static/`.
+2. **Rsyncs** the contents of `hub/` to `${PI_PATH}` on the Pi (default `/hub`), excluding venvs, caches, `.git`, `node_modules`, logs, `.env`, and similar.
+3. **On the Pi**, finds `backend` (supports `/hub/backend` or `/hub/hub/backend`), runs `docker compose` / `docker-compose` **down** (volumes are not removed), then **up -d --build**, prints container status and a short log tail.
 
-```bash
-cd hub/system
-./deploy-quick.sh
-```
+Edit `PI_USER`, `PI_HOST`, and `PI_PATH` in `deploy.sh` if your Pi or paths differ.
 
-This script will:
-1. Sync only the `app/` directory (your Python code)
-2. Restart the Flask container to pick up changes
-3. Show recent logs
+## `logs.sh`
 
-**Note**: Since your code is mounted as a volume in Docker, changes sync immediately. The restart ensures Flask picks up the changes.
-
-## Accessing Your Application
-
-After deployment, your application will be available at:
-- **API**: `http://hub.local` (or `http://<pi-ip-address>`) - listening on port 80 (default HTTP port)
-- **Database**: Accessible on port 5432 (if needed externally)
-
-## Viewing Logs
-
-### Using `logs.sh` (Recommended)
-
-The easiest way to view logs from your development machine:
+Stream live logs from a Compose service on the Pi over SSH.
 
 ```bash
 cd hub/system
-./logs.sh
-```
-
-This will:
-- Connect to your Pi via SSH
-- Show live logs from the Flask service (default)
-- Stream logs in real-time (press Ctrl+C to exit)
-
-**Options:**
-- View a specific service: `./logs.sh db` (to view database logs)
-- Show more/less initial lines: `./logs.sh --tail 200` (shows last 200 lines)
-- Combine options: `./logs.sh db --tail 50` (database logs, last 50 lines)
-
-Examples:
-```bash
-# View Flask logs (default)
-./logs.sh
-
-# View database logs
-./logs.sh db
-
-# View last 500 lines of Flask logs
-./logs.sh --tail 500
-
-# View last 50 lines of database logs
+./logs.sh              # follow flask logs (default)
+./logs.sh db           # follow database logs
+./logs.sh --tail 200   # show last 200 lines before following
 ./logs.sh db --tail 50
 ```
 
-### Managing Containers on Pi
+Default service name is `flask`; use `db` for Postgres. Press Ctrl+C to stop.
 
-You can SSH into your Pi to manage containers directly:
+`PI_USER` and `PI_HOST` match `deploy.sh`; change them in `logs.sh` if needed.
 
-```bash
-ssh user@hub.local
-cd /hub/backend
+## Accessing the app
 
-# View logs (alternative to logs.sh)
-sudo docker-compose logs -f
+After a successful deploy:
 
-# Stop containers
-sudo docker-compose down
-
-# Restart containers
-sudo docker-compose restart
-
-# View container status
-sudo docker-compose ps
-```
+- **HTTP**: `http://hub.local` (or the Pi’s IP)—Flask is published on host port **80**.
+- **Postgres**: host port **5432** if you need direct access.
 
 ## Troubleshooting
 
-### Permission Issues
-If you get permission errors, make sure:
-- Your user is in the `docker` group: `groups` should show `docker`
-- You've logged out and back in after adding to docker group
-- Or use `sudo` with docker commands
+**Permission / Docker on the Pi**  
+Ensure your user is in the `docker` group (or use `sudo` for compose on the Pi). Log out and back in after group changes.
 
-### Port Already in Use
-If port 80 is already in use:
-- Check what's using it: `sudo lsof -i :80`
-- You may need to use `sudo` with docker-compose commands to bind to port 80 (privileged port)
-- Or modify the port in `docker-compose.yml` (change `"80:80"` to `"8080:80"` to use port 8080 on the host instead)
+**Port 80 in use**  
+Check with `sudo lsof -i :80` on the Pi, or change the port mapping in `hub/backend/docker-compose.yml`.
 
-### Database Issues
-If the database isn't starting:
-- Check logs: `sudo docker-compose logs db` or `./logs.sh db`
-- Ensure the `init-schema.sql` file was copied correctly
-- The database data persists in a Docker volume, so it won't be lost on redeploy
+**Database**  
+Inspect with `./logs.sh db`. Data lives in the `postgres_data` volume; `deploy.sh` does not remove volumes on `down`. To wipe DB data: on the Pi, in the backend directory, `sudo docker compose down -v` (destructive).
 
-### Data Persistence
-**Your database data is safe!** The database uses a named Docker volume (`postgres_data`) that persists independently of containers. When you run `deploy.sh`:
-- Containers are stopped and recreated
-- **Database volume is NOT removed** - all your data remains intact
-- The `--delete` flag in rsync only affects file syncing, not Docker volumes
-
-To completely wipe data (if needed):
-```bash
-ssh user@hub.local
-cd /hub/backend
-sudo docker-compose down -v  # The -v flag removes volumes
-```
-
-### Connection Issues
-If you can't connect to `hub.local`:
-- Try using the IP address instead: `ssh user@<pi-ip-address>`
-- Update the `PI_HOST` variable in `deploy.sh` and `logs.sh` if needed
-
+**Cannot resolve `hub.local`**  
+Use the Pi’s IP for SSH and set `PI_HOST` in both scripts, or add a hosts entry.
