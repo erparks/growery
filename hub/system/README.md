@@ -1,6 +1,6 @@
 # Raspberry Pi deployment (`hub/system`)
 
-This folder contains two scripts for deploying and operating the dockerized Growery stack on a Raspberry Pi from your development machine.
+This folder contains scripts for deploying and operating the dockerized Growery stack on a Raspberry Pi from your development machine.
 
 ## Prerequisites
 
@@ -26,6 +26,19 @@ What it does:
 3. **On the Pi**, finds `backend` (supports `/hub/backend` or `/hub/hub/backend`), runs `docker compose` / `docker-compose` **down** (volumes are not removed), then **up -d --build**, prints container status and a short log tail.
 
 Edit `PI_USER`, `PI_HOST`, and `PI_PATH` in `deploy.sh` if your Pi or paths differ.
+
+## `deploy-frontend.sh`
+
+Fast path when you only changed the **Svelte UI**. Builds `hub/view`, rsyncs **`hub/backend/static/`** to the Pi (same bind mount Flask uses), then **`docker compose restart flask`**—no full-tree rsync, no image rebuild, no Postgres restart.
+
+**Use after** at least one successful full `deploy.sh` so the Pi layout and containers exist.
+
+```bash
+cd hub/system
+./deploy-frontend.sh
+```
+
+Keep `PI_USER`, `PI_HOST`, and `PI_PATH` in sync with `deploy.sh`.
 
 ## `logs.sh`
 

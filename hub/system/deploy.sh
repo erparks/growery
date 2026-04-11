@@ -7,7 +7,7 @@
 #   - When Dockerfile changes
 #   - When docker-compose.yml changes
 #
-# For code-only changes, use deploy-quick.sh instead
+# For UI-only changes, use deploy-frontend.sh (faster).
 # Usage: ./deploy.sh
 
 set -e

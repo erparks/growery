@@ -91,7 +91,7 @@
 <main>
 	<div class="container column">
 		<div class="container">
-			<h1 class="app-title">
+			<h1 class="form-page-title">
 				{#if loadingPlant}
 					Add Note
 				{:else if plant?.nickname}
@@ -107,8 +107,9 @@
 		<div class="form-container">
 			<form on:submit={handleSubmit}>
 				<div class="form-group">
-					<label for="dueDate">Due (Optional)</label>
+					<label class="form-label" for="dueDate">Due (Optional)</label>
 					<input
+						class="form-field"
 						id="dueDate"
 						type="datetime-local"
 						bind:value={dueDateLocal}
@@ -117,14 +118,22 @@
 				</div>
 
 				<div class="form-group">
-					<label for="image">Image (Optional)</label>
-					<input id="image" type="file" accept="image/*" on:change={handleImageChange} disabled={submitting} />
+					<label class="form-label" for="image">Image (Optional)</label>
+					<input
+						class="form-field form-file-button"
+						id="image"
+						type="file"
+						accept="image/*"
+						on:change={handleImageChange}
+						disabled={submitting}
+					/>
 					<div class="file-hint">Optional: attach a photo to this note</div>
 				</div>
 
 				<div class="form-group">
-					<label for="content">Note</label>
+					<label class="form-label" for="content">Note</label>
 					<textarea
+						class="form-field"
 						id="content"
 						bind:value={content}
 						required
@@ -135,14 +144,14 @@
 				</div>
 
 				{#if error}
-					<div class="error-message">{error}</div>
+					<div class="form-error">{error}</div>
 				{/if}
 
 				<div class="form-actions">
-					<button type="button" class="cancel-button" on:click={backToPlant} disabled={submitting}>
+					<button type="button" class="btn btn-ghost" on:click={backToPlant} disabled={submitting}>
 						Cancel
 					</button>
-					<button type="submit" class="submit-button" disabled={submitting || !content.trim()}>
+					<button type="submit" class="btn btn-primary" disabled={submitting || !content.trim()}>
 						{submitting ? 'Saving...' : 'Save Note'}
 					</button>
 				</div>
@@ -170,45 +179,9 @@
 		gap: 0.5rem;
 	}
 
-	label {
-		font-family: 'IBM Plex Mono', monospace;
-		color: #00ff88;
-		font-size: 0.9rem;
-	}
-
-	input,
-	textarea {
-		background-color: rgba(0, 0, 0, 0.5);
-		border: 1px solid rgba(0, 255, 136, 0.5);
-		color: #00ff88;
-		font-family: 'Source Code Pro', monospace;
-		padding: 0.75rem;
-		border-radius: 4px;
-		font-size: 1rem;
-		transition: all 0.3s ease-in-out;
-	}
-
 	textarea {
 		resize: vertical;
 		min-height: 140px;
-	}
-
-	input:focus,
-	textarea:focus {
-		outline: none;
-		border-color: #00ff00;
-		box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
-	}
-
-	input:disabled,
-	textarea:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
-	}
-
-	input::placeholder,
-	textarea::placeholder {
-		color: rgba(0, 255, 136, 0.5);
 	}
 
 	input[type='file'] {
@@ -216,38 +189,10 @@
 		padding: 0.5rem;
 	}
 
-	input[type='file']::file-selector-button {
-		background: black;
-		border: 1px solid rgba(0, 255, 136, 0.5);
-		color: #00ff88;
-		font-family: 'IBM Plex Mono', monospace;
-		padding: 0.5rem 1rem;
-		border-radius: 4px;
-		cursor: pointer;
-		margin-right: 1rem;
-		transition: all 0.3s ease-in-out;
-	}
-
-	input[type='file']::file-selector-button:hover {
-		border-color: #00ff00;
-		box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
-	}
-
 	.file-hint {
 		font-size: 0.8rem;
-		color: rgba(0, 255, 136, 0.6);
-		font-family: 'Source Code Pro', monospace;
+		color: var(--color-text-muted);
 		margin-top: 0.25rem;
-	}
-
-	.error-message {
-		background-color: rgba(255, 0, 0, 0.2);
-		border: 1px solid rgba(255, 0, 0, 0.5);
-		color: #ff6b6b;
-		padding: 0.75rem;
-		border-radius: 4px;
-		font-family: 'Source Code Pro', monospace;
-		font-size: 0.9rem;
 	}
 
 	.form-actions {
@@ -255,44 +200,7 @@
 		gap: 1rem;
 		justify-content: flex-end;
 		margin-top: 1rem;
-	}
-
-	.submit-button,
-	.cancel-button {
-		background: black;
-		border: 2px solid #00ff00;
-		color: #00ff00;
-		font-family: 'IBM Plex Mono', monospace;
-		font-size: 16px;
-		padding: 10px 24px;
-		cursor: pointer;
-		transition: all 0.3s ease-in-out;
-		box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
-		border-radius: 8px;
-	}
-
-	.submit-button:hover:not(:disabled) {
-		background: #00ff00;
-		color: black;
-		box-shadow: 0 0 20px #00ff00;
-	}
-
-	.cancel-button {
-		border-color: rgba(0, 255, 136, 0.5);
-		color: rgba(0, 255, 136, 0.8);
-		box-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
-	}
-
-	.cancel-button:hover:not(:disabled) {
-		border-color: rgba(0, 255, 136, 0.8);
-		color: #00ff88;
-		box-shadow: 0 0 15px rgba(0, 255, 136, 0.4);
-	}
-
-	.submit-button:disabled,
-	.cancel-button:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
+		flex-wrap: wrap;
 	}
 </style>
 

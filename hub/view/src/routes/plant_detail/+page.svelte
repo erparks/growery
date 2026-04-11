@@ -1,7 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
-	import { goto } from '$app/navigation';
 	import PhotoHistories from '$lib/components/PhotoHistories.svelte';
 
 	let plant = null;
@@ -86,7 +85,7 @@
 <main>
 	<div class="container column">
 		<div class="container">
-			<h1 class="app-title clickable" on:click={() => goto('/')}>growery</h1>
+			<a href="/" class="app-title">growery</a>
 		</div>
 
 		{#if loading}
@@ -136,9 +135,11 @@
 	}
 
 	.plant-detail .card h2 {
-		color: #00ff00;
+		color: var(--color-heading);
 		margin-bottom: 1rem;
 		font-size: 1.5rem;
+		font-weight: 600;
+		letter-spacing: 0.02em;
 	}
 
 	.info-table {
@@ -147,7 +148,7 @@
 	}
 
 	.info-table tbody tr {
-		border-bottom: 1px solid rgba(0, 255, 136, 0.3);
+		border-bottom: 1px solid var(--color-border);
 	}
 
 	.info-table tbody tr:last-child {
@@ -155,31 +156,29 @@
 	}
 
 	.info-table .label {
-		padding: 0.75rem 1rem;
-		font-weight: bold;
-		color: #00ff88;
+		padding: 0.75rem 1rem 0.75rem 0;
+		font-weight: 500;
+		color: var(--color-text-muted);
 		width: 30%;
 		text-align: left;
+		vertical-align: top;
 	}
 
 	.info-table .value {
-		padding: 0.75rem 1rem;
-		color: #00ff00;
+		padding: 0.75rem 0;
+		color: var(--color-text);
 	}
 
 	.loading,
 	.error {
 		text-align: center;
 		padding: 2rem;
-		color: #00ff88;
-		font-size: 1.2rem;
+		color: var(--color-text-muted);
+		font-size: 1.1rem;
 	}
 
 	.error {
-		color: #ff4444;
+		color: var(--color-danger);
 	}
 
-	.clickable {
-		cursor: pointer;
-	}
 </style>

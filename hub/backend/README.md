@@ -58,20 +58,16 @@ docker exec -it growery_db psql -U growery_user -d growery
 
 ## Deployment
 
-For deployment instructions, see [../system/DEPLOYMENT.md](../system/DEPLOYMENT.md).
+For deployment details, see [../system/README.md](../system/README.md).
 
-Quick deployment commands:
-
-- **Full deploy** (for initial setup or when dependencies/Dockerfiles change):
+- **Full deploy** (initial setup, Docker/Compose/requirements changes, or anything beyond UI assets):
   ```bash
   cd hub/system
   ./deploy.sh
   ```
-  (Run from project root, or use `cd ../system` if already in `hub/backend/`)
 
-- **Quick deploy** (for Python code changes only):
+- **Frontend only** (Svelte build → `backend/static`, fast rsync + Flask restart):
   ```bash
   cd hub/system
-  ./deploy-quick.sh
+  ./deploy-frontend.sh
   ```
-  (Run from project root, or use `cd ../system` if already in `hub/backend/`)

@@ -1,3 +1,36 @@
+/* Night greenhouse — design tokens */
+:root {
+    --color-bg: #0a0f0d;
+    --color-bg-top: #101816;
+    --color-surface: rgba(18, 26, 22, 0.72);
+    --color-surface-solid: #131a17;
+    --color-surface-raised: rgba(28, 38, 33, 0.85);
+    --color-border: rgba(130, 158, 142, 0.2);
+    --color-border-strong: rgba(130, 158, 142, 0.38);
+    --color-text: #e4ebe6;
+    --color-text-muted: #8fa396;
+    --color-heading: #dce8df;
+    --color-accent: #8fb39a;
+    --color-accent-soft: rgba(143, 179, 154, 0.18);
+    --color-accent-warm: #c9a86c;
+    --color-danger: #c08080;
+    --color-danger-soft: rgba(192, 128, 128, 0.15);
+    --radius-sm: 6px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-full: 9999px;
+    --shadow-soft: 0 12px 40px rgba(0, 0, 0, 0.35);
+    --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.28);
+    --font-sans: 'DM Sans', system-ui, -apple-system, sans-serif;
+    --focus-ring: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-accent);
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
 .container {
     display: flex;
     flex-wrap: wrap;
@@ -15,7 +48,7 @@
 .flex-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: 1rem;
+    gap: 1.25rem;
     justify-content: center;
 }
 
@@ -29,14 +62,12 @@
     }
 }
 
-/* Three columns on larger screens */
 @media (min-width: 900px) {
     .flex-grid .card {
         flex: 1 1 calc(33.333% - 1rem);
     }
 }
 
-/* Four columns on extra-large screens */
 @media (min-width: 1200px) {
     .flex-grid .card {
         flex: 1 1 calc(25% - 1rem);
@@ -45,122 +76,145 @@
 
 .card {
     flex: 1 1 300px;
-    border: 1px solid rgba(0, 255, 136, 0.5);
-    padding: 1rem;
+    border: 1px solid var(--color-border);
+    padding: 1rem 1.25rem;
     text-align: center;
-    border-radius: 8px;
-    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: var(--shadow-card);
 }
 
 a {
-    all: unset;
-    display: block;
-    width: 100%;
-    text-align: left;
-    cursor: pointer;
+    color: var(--color-accent);
+    text-decoration: none;
 }
 
+a:hover {
+    color: var(--color-heading);
+}
+
+a:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+    border-radius: var(--radius-sm);
+}
 
 body {
-    /* Tiled broken concrete image background */
-    --bg-overlay: rgba(10, 15, 13, 0.72);
-    --bg-tile-size: 640px;
-
-    background-color: #0a0f0d;
-    background-image:
-        /* darken for neon readability */
-        linear-gradient(var(--bg-overlay), var(--bg-overlay)),
-        /* place your texture in hub/view/static/broken-concrete.jpg */
-        url('/broken-concrete.jpg'),
-        /* subtle lighting variation to reduce visible tiling */
-        radial-gradient(circle at 80% 15%, rgba(255, 255, 255, 0.08) 0 220px, transparent 520px),
-        radial-gradient(circle at 10% 90%, rgba(0, 0, 0, 0.12) 0 280px, transparent 620px),
-        /* very light grit */
-        repeating-radial-gradient(circle at 20% 30%, rgba(0, 0, 0, 0.05) 0 1px, transparent 1px 9px);
-    background-size:
-        100% 100%,
-        var(--bg-tile-size) var(--bg-tile-size),
-        100% 100%,
-        100% 100%,
-        160px 160px;
-    background-repeat: no-repeat, repeat, no-repeat, no-repeat, repeat;
-    background-attachment: fixed;
-
-    color: #00ff88;
-    font-family: 'Source Code Pro', monospace;
-    padding: 2rem;
+    margin: 0;
+    min-height: 100vh;
+    background-color: var(--color-bg);
+    background-image: linear-gradient(
+        168deg,
+        var(--color-bg-top) 0%,
+        var(--color-bg) 42%,
+        #080b09 100%
+    );
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.5;
+    padding: 1.5rem clamp(1rem, 4vw, 2.5rem) 5rem;
+    -webkit-font-smoothing: antialiased;
 }
 
 .app-title {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 3rem;
-    color: #00ff00;
-    letter-spacing: 2px;
-    animation: grow 2s infinite ease-in-out;
-    /* Remove gradient & add a neon glow */
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-
-    text-shadow: 0 0 10px #00ff00,
-        0 0 2px #33ff33,
-        0 0 2px #00ff00;
-
+    font-family: var(--font-sans);
+    font-size: clamp(1.75rem, 5vw, 2.75rem);
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    color: var(--color-heading);
+    text-transform: lowercase;
     display: inline-block;
+    margin: 0;
+}
+
+.app-title.clickable {
+    cursor: pointer;
+    transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.app-title.clickable:hover {
+    color: var(--color-accent);
+}
+
+.app-title.clickable:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 6px;
+    border-radius: var(--radius-sm);
+}
+
+/* Home link uses <h1>; plant detail uses <a class="app-title"> */
+a.app-title {
+    color: var(--color-heading);
+    text-decoration: none;
+}
+
+a.app-title:hover {
+    color: var(--color-accent);
+}
+
+a.app-title:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 6px;
+    border-radius: var(--radius-sm);
 }
 
 .text-small {
-    font-size: small;
-}
-
-@keyframes grow {
-    0% {
-        transform: scale(1);
-    }
-
-    50% {
-        transform: scale(1.075);
-    }
-
-    100% {
-        transform: scale(1);
-    }
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
 }
 
 .pump-button {
-    background: black;
-    border: 2px solid #00ff00;
-    color: #00ff00;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 16px;
-    padding: 8px 16px;
+    background: var(--color-surface-solid);
+    border: 1px solid var(--color-border-strong);
+    color: var(--color-accent);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    padding: 0.5rem 1.25rem;
     cursor: pointer;
-    transition: all 0.3s ease-in-out;
-    box-shadow: 0 0 10px #00ff00;
-    border-radius: 8px;
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease;
+    border-radius: var(--radius-md);
+}
+
+.pump-button:hover:not(:disabled) {
+    background: var(--color-accent-soft);
+    border-color: var(--color-accent);
 }
 
 .pump-button-pumping {
-    background: #00ff00;
-    color: black;
-    box-shadow: 0 0 20px #00ff00;
+    background: var(--color-accent-soft);
+    color: var(--color-heading);
+    border-color: var(--color-accent);
 }
 
 .floating-add-button {
     position: fixed;
-    bottom: 2rem;
-    right: 2rem;
-    width: 64px;
-    height: 64px;
-    border-radius: 50%;
-    background-color: rgba(0, 0, 0, 0.8);
-    border: 2px solid #00ff00;
-    color: #00ff00;
-    font-size: 2rem;
-    font-family: 'IBM Plex Mono', monospace;
+    bottom: 1.75rem;
+    right: 1.75rem;
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radius-full);
+    background: var(--color-surface-solid);
+    border: 1px solid var(--color-border-strong);
+    color: var(--color-accent-warm);
+    font-size: 1.75rem;
+    font-weight: 400;
+    font-family: var(--font-sans);
+    line-height: 1;
     cursor: pointer;
-    transition: all 0.3s ease-in-out;
-    box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+    box-shadow: var(--shadow-soft);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -168,12 +222,149 @@ body {
 }
 
 .floating-add-button:hover {
-    background-color: #00ff00;
-    color: black;
-    box-shadow: 0 0 25px #00ff00;
-    transform: scale(1.1);
+    background: rgba(201, 168, 108, 0.12);
+    border-color: var(--color-accent-warm);
+    color: #dcc39a;
+    transform: translateY(-2px);
 }
 
 .floating-add-button:active {
-    transform: scale(0.95);
+    transform: translateY(0);
+}
+
+.floating-add-button:focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-soft), 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-accent-warm);
+}
+
+/* Shared form patterns (add-plant, add-note) */
+.form-page-title {
+    font-family: var(--font-sans);
+    font-size: clamp(1.5rem, 4vw, 2.25rem);
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    color: var(--color-heading);
+    margin: 0;
+}
+
+.form-label {
+    font-family: var(--font-sans);
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.form-field {
+    background-color: var(--color-surface-solid);
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-sm);
+    font-size: 1rem;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.form-field::placeholder {
+    color: rgba(143, 163, 150, 0.45);
+}
+
+.form-field:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: var(--focus-ring);
+}
+
+.form-field:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.form-file-button::-webkit-file-upload-button {
+    background: var(--color-surface-raised);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-muted);
+    font-family: var(--font-sans);
+    padding: 0.45rem 1rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    margin-right: 1rem;
+    transition:
+        border-color 0.2s ease,
+        color 0.2s ease;
+}
+
+.form-file-button::-webkit-file-upload-button:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+}
+
+.form-file-button::file-selector-button {
+    background: var(--color-surface-raised);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-muted);
+    font-family: var(--font-sans);
+    padding: 0.45rem 1rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    margin-right: 1rem;
+    transition:
+        border-color 0.2s ease,
+        color 0.2s ease;
+}
+
+.form-file-button::file-selector-button:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+}
+
+.btn {
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    padding: 0.65rem 1.35rem;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-primary {
+    background: var(--color-accent-soft);
+    border: 1px solid var(--color-border-strong);
+    color: var(--color-heading);
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: rgba(143, 179, 154, 0.28);
+    border-color: var(--color-accent);
+}
+
+.btn-ghost {
+    background: transparent;
+    border: 1px solid var(--color-border);
+    color: var(--color-text-muted);
+}
+
+.btn-ghost:hover:not(:disabled) {
+    border-color: var(--color-text-muted);
+    color: var(--color-text);
+}
+
+.form-error {
+    background-color: var(--color-danger-soft);
+    border: 1px solid rgba(192, 128, 128, 0.45);
+    color: var(--color-danger);
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
 }

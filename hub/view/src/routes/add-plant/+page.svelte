@@ -157,14 +157,15 @@
 <main>
 	<div class="container column">
 		<div class="container">
-			<h1 class="app-title">Add New Plant</h1>
+			<h1 class="form-page-title">Add New Plant</h1>
 		</div>
 
 		<div class="form-container">
 			<form on:submit={handleSubmit}>
 				<div class="form-group">
-					<label for="nickname">Nickname</label>
+					<label class="form-label" for="nickname">Nickname</label>
 					<input
+						class="form-field"
 						type="text"
 						id="nickname"
 						bind:value={nickname}
@@ -175,8 +176,9 @@
 				</div>
 
 				<div class="form-group">
-					<label for="species">Species</label>
+					<label class="form-label" for="species">Species</label>
 					<input
+						class="form-field"
 						type="text"
 						id="species"
 						bind:value={species}
@@ -187,8 +189,9 @@
 				</div>
 
 				<div class="form-group">
-					<label for="image">Image (Optional)</label>
+					<label class="form-label" for="image">Image (Optional)</label>
 					<input
+						class="form-field form-file-button"
 						type="file"
 						id="image"
 						accept="image/*"
@@ -215,16 +218,16 @@
 				{/if}
 
 				{#if error}
-					<div class="error-message">{error}</div>
+					<div class="form-error">{error}</div>
 				{/if}
 
 				<div class="form-actions">
-					<button type="button" class="cancel-button" on:click={handleCancel} disabled={submitting}>
+					<button type="button" class="btn btn-ghost" on:click={handleCancel} disabled={submitting}>
 						Cancel
 					</button>
 					<button
 						type="submit"
-						class="submit-button"
+						class="btn btn-primary"
 						disabled={submitting || !nickname.trim() || !species.trim()}
 					>
 						{submitting ? 'Adding...' : 'Add Plant'}
@@ -254,64 +257,14 @@
 		gap: 0.5rem;
 	}
 
-	label {
-		font-family: 'IBM Plex Mono', monospace;
-		color: #00ff88;
-		font-size: 0.9rem;
-	}
-
-	input {
-		background-color: rgba(0, 0, 0, 0.5);
-		border: 1px solid rgba(0, 255, 136, 0.5);
-		color: #00ff88;
-		font-family: 'Source Code Pro', monospace;
-		padding: 0.75rem;
-		border-radius: 4px;
-		font-size: 1rem;
-		transition: all 0.3s ease-in-out;
-	}
-
-	input:focus {
-		outline: none;
-		border-color: #00ff00;
-		box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
-	}
-
-	input:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
-	}
-
-	input::placeholder {
-		color: rgba(0, 255, 136, 0.5);
-	}
-
 	input[type='file'] {
 		cursor: pointer;
 		padding: 0.5rem;
 	}
 
-	input[type='file']::file-selector-button {
-		background: black;
-		border: 1px solid rgba(0, 255, 136, 0.5);
-		color: #00ff88;
-		font-family: 'IBM Plex Mono', monospace;
-		padding: 0.5rem 1rem;
-		border-radius: 4px;
-		cursor: pointer;
-		margin-right: 1rem;
-		transition: all 0.3s ease-in-out;
-	}
-
-	input[type='file']::file-selector-button:hover {
-		border-color: #00ff00;
-		box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
-	}
-
 	.file-hint {
 		font-size: 0.8rem;
-		color: rgba(0, 255, 136, 0.6);
-		font-family: 'Source Code Pro', monospace;
+		color: var(--color-text-muted);
 		margin-top: 0.25rem;
 	}
 
@@ -322,17 +275,17 @@
 	.image-preview-wrapper {
 		position: relative;
 		display: inline-block;
-		border: 1px solid rgba(0, 255, 136, 0.5);
-		border-radius: 4px;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
 		padding: 0.5rem;
-		background-color: rgba(0, 0, 0, 0.3);
+		background-color: var(--color-surface-solid);
 	}
 
 	.image-preview {
 		max-width: 100%;
 		max-height: 300px;
 		display: block;
-		border-radius: 4px;
+		border-radius: var(--radius-sm);
 	}
 
 	.remove-image-button {
@@ -342,24 +295,25 @@
 		width: 32px;
 		height: 32px;
 		border-radius: 50%;
-		background-color: rgba(0, 0, 0, 0.8);
-		border: 2px solid #ff6b6b;
-		color: #ff6b6b;
+		background-color: var(--color-surface-raised);
+		border: 1px solid var(--color-danger);
+		color: var(--color-danger);
 		font-size: 1.5rem;
-		font-family: 'IBM Plex Mono', monospace;
+		font-family: inherit;
 		cursor: pointer;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		transition: all 0.3s ease-in-out;
+		transition:
+			background 0.2s ease,
+			color 0.2s ease;
 		line-height: 1;
 		padding: 0;
 	}
 
 	.remove-image-button:hover:not(:disabled) {
-		background-color: #ff6b6b;
-		color: black;
-		box-shadow: 0 0 15px rgba(255, 107, 107, 0.5);
+		background-color: var(--color-danger-soft);
+		color: var(--color-danger);
 	}
 
 	.remove-image-button:disabled {
@@ -367,58 +321,11 @@
 		cursor: not-allowed;
 	}
 
-	.error-message {
-		background-color: rgba(255, 0, 0, 0.2);
-		border: 1px solid rgba(255, 0, 0, 0.5);
-		color: #ff6b6b;
-		padding: 0.75rem;
-		border-radius: 4px;
-		font-family: 'Source Code Pro', monospace;
-		font-size: 0.9rem;
-	}
-
 	.form-actions {
 		display: flex;
 		gap: 1rem;
 		justify-content: flex-end;
 		margin-top: 1rem;
-	}
-
-	.submit-button,
-	.cancel-button {
-		background: black;
-		border: 2px solid #00ff00;
-		color: #00ff00;
-		font-family: 'IBM Plex Mono', monospace;
-		font-size: 16px;
-		padding: 10px 24px;
-		cursor: pointer;
-		transition: all 0.3s ease-in-out;
-		box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
-		border-radius: 8px;
-	}
-
-	.submit-button:hover:not(:disabled) {
-		background: #00ff00;
-		color: black;
-		box-shadow: 0 0 20px #00ff00;
-	}
-
-	.cancel-button {
-		border-color: rgba(0, 255, 136, 0.5);
-		color: rgba(0, 255, 136, 0.8);
-		box-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
-	}
-
-	.cancel-button:hover:not(:disabled) {
-		border-color: rgba(0, 255, 136, 0.8);
-		color: #00ff88;
-		box-shadow: 0 0 15px rgba(0, 255, 136, 0.4);
-	}
-
-	.submit-button:disabled,
-	.cancel-button:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
+		flex-wrap: wrap;
 	}
 </style>
