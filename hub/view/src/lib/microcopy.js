@@ -144,30 +144,23 @@ const TIMELINE_EMPTY = {
 	]
 };
 
-/** Short labels (2–3 words) for the timeline header buttons */
+/** Short labels (2–3 words) for the timeline header buttons — neutral only (no time-of-day) */
 const TIMELINE_UPLOAD_LABEL = {
-	neutral: ['Upload', 'Add photos', 'Images'],
-	day: ['Upload', 'Add photos'],
-	dusk: ['Upload', 'Golden hour'],
-	late: ['Upload', 'One more shot'],
-	night: ['Upload', 'Add photos']
+	neutral: ['Upload', 'Add photos', 'Images']
 };
 
 const TIMELINE_ADD_NOTE_LABEL = {
-	neutral: ['Add note', 'Note', 'Journal'],
-	day: ['Add note', 'Note'],
-	dawn: ['Note', 'Morning note'],
-	night: ['Add note', 'Note']
+	neutral: ['Add note', 'Note', 'Journal']
 };
 
+/** Floating add button — descriptive but not time-specific */
 const FAB_ARIA = {
-	night: ['Add a new plant', 'Bring another plant to the bench', 'Start a new plant'],
-	predawn: ['Add a new plant', 'Add another to the collection'],
-	dawn: ['Add a new plant', 'New plant—morning', 'Add a plant'],
-	day: ['Add a new plant', 'Add another plant', 'New plant'],
-	dusk: ['Add a new plant', 'Add a plant before dark'],
-	late: ['Add a new plant', 'One more plant for the night'],
-	neutral: ['Add a new plant']
+	neutral: [
+		'Add a new plant',
+		'Add another plant',
+		'Bring another plant to the bench',
+		'Start a new plant'
+	]
 };
 
 const ADD_PLANT_SUB = {
