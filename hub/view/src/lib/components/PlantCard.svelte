@@ -56,24 +56,24 @@
 		padding: 0;
 		overflow: hidden;
 		text-align: left;
-		color: var(--color-text, #e4ebe6);
+		color: var(--color-text, #e9f0ec);
 		text-decoration: none;
 		transition:
 			transform 0.2s ease,
-			box-shadow 0.2s ease,
+			box-shadow 1.5s ease,
 			border-color 0.2s ease;
 	}
 
 	.plant-card:hover {
-		color: var(--color-text, #e4ebe6);
+		color: var(--color-text, #e9f0ec);
 		text-decoration: none;
 		transform: translateY(-3px);
 		box-shadow: var(--shadow-soft, 0 12px 40px rgba(0, 0, 0, 0.35));
-		border-color: var(--color-border-strong, rgba(130, 158, 142, 0.38));
+		border-color: var(--color-border-strong, rgba(228, 200, 130, 0.68));
 	}
 
 	.plant-card:focus-visible {
-		outline: 2px solid var(--color-accent, #8fb39a);
+		outline: 2px solid var(--color-accent, #a3c9b0);
 		outline-offset: 3px;
 	}
 
@@ -81,7 +81,7 @@
 		width: 100%;
 		aspect-ratio: 4 / 3;
 		overflow: hidden;
-		background-color: var(--color-surface-solid, #131a17);
+		background-color: var(--color-surface-solid, #1e2a24);
 	}
 
 	.card-image img {
@@ -101,7 +101,7 @@
 		font-size: 1.125rem;
 		font-weight: 600;
 		letter-spacing: 0.02em;
-		color: var(--color-heading, #dce8df);
+		color: var(--color-heading, #e8f2e9);
 	}
 
 	.species {
@@ -109,7 +109,7 @@
 	}
 
 	.incomplete-star {
-		color: var(--color-danger, #c08080);
+		color: var(--color-danger, #c9a8a8);
 		font-weight: 700;
 	}
 </style>

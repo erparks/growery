@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { NoteService } from '$lib/services/noteService.js';
+	import { pickMicrocopy } from '$lib/microcopy.js';
 
 	let plantId = null;
 	let plant = null;
@@ -13,6 +14,7 @@
 	let imageFile = null;
 	let submitting = false;
 	let error = '';
+	let addNoteSubtitle = $state('');
 
 	const toIsoOrNull = (datetimeLocalValue) => {
 		if (!datetimeLocalValue) return null;
@@ -38,6 +40,10 @@
 			// Non-fatal; page still works without plant metadata
 		} finally {
 			loadingPlant = false;
+			if (plantId) {
+				const nick = plant?.nickname?.trim() || `Plant #${plantId}`;
+				addNoteSubtitle = pickMicrocopy('addNoteSubtitle', new Date(), { nickname: nick });
+			}
 		}
 	};
 
@@ -102,6 +108,9 @@
 					Add Note
 				{/if}
 			</h1>
+			{#if !loadingPlant && plantId && addNoteSubtitle}
+				<p class="microcopy microcopy-muted form-page-subtitle">{addNoteSubtitle}</p>
+			{/if}
 		</div>
 
 		<div class="form-container">

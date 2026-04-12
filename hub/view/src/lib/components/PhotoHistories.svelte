@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { NoteService } from '$lib/services/noteService.js';
+	import { pickMicrocopy } from '$lib/microcopy.js';
 
 	let { plantId } = $props();
 
@@ -18,6 +19,12 @@
 	let editingContent = $state('');
 	let editingDueDateLocal = $state('');
 	let completingNoteId = $state(null);
+
+	let sectionTitle = $state('Images & Notes');
+	let timelineLoadingLine = $state('');
+	let timelineEmptyLine = $state('');
+	let uploadLabel = $state('Upload');
+	let addNoteLabel = $state('Add note');
 
 	const loadMore = () => {
 		displayedCount += 10;
@@ -36,6 +43,12 @@
 	};
 
 	onMount(() => {
+		const d = new Date();
+		sectionTitle = pickMicrocopy('timelineSectionTitle', d);
+		timelineLoadingLine = pickMicrocopy('timelineLoading', d);
+		timelineEmptyLine = pickMicrocopy('timelineEmpty', d);
+		uploadLabel = pickMicrocopy('timelineUploadLabel', d);
+		addNoteLabel = pickMicrocopy('timelineAddNoteLabel', d);
 		fetchTimeline();
 	});
 
@@ -333,13 +346,13 @@
 
 <section class="card">
 	<div class="card-header">
-		<h2>Images & Notes</h2>
+		<h2>{sectionTitle}</h2>
 		<div class="header-actions">
 			<button class="upload-btn" onclick={() => goto(`/add-note?plant_id=${plantId}`)}
-				>Add Note</button
+				>{addNoteLabel}</button
 			>
 			<button class="upload-btn" onclick={triggerFileInput} disabled={uploading}>
-				{uploading ? 'Uploading...' : 'Upload Images'}
+				{uploading ? 'Uploading...' : uploadLabel}
 			</button>
 		</div>
 		<input
@@ -355,9 +368,9 @@
 		<div class="upload-progress">{uploadProgress}</div>
 	{/if}
 	{#if loading && timelineItems.length === 0}
-		<p class="no-photos">Loading timeline...</p>
+		<p class="no-photos">{timelineLoadingLine || 'Loading timeline...'}</p>
 	{:else if timelineItems.length === 0}
-		<p class="no-photos">No images or notes yet for this plant.</p>
+		<p class="no-photos">{timelineEmptyLine || 'No images or notes yet for this plant.'}</p>
 	{:else}
 		<div class="photos-container">
 			{#each groupPhotosByDate as dateGroup}
@@ -700,7 +713,7 @@
 	}
 
 	.upload-btn:hover:not(:disabled) {
-		background-color: rgba(143, 179, 154, 0.28);
+		background-color: rgba(163, 201, 176, 0.3);
 		border-color: var(--color-accent);
 		transform: translateY(-1px);
 	}
@@ -777,7 +790,7 @@
 		background-color: var(--color-surface-solid);
 		transition:
 			transform 0.2s ease,
-			box-shadow 0.2s ease,
+			box-shadow 1.5s ease,
 			border-color 0.2s ease;
 		cursor: pointer;
 		outline: none;
@@ -799,7 +812,7 @@
 		position: absolute;
 		top: 8px;
 		right: 8px;
-		background: rgba(10, 15, 13, 0.72);
+		background: rgba(18, 26, 22, 0.78);
 		border: 1px solid var(--color-border);
 		color: var(--color-danger);
 		width: 32px;
@@ -883,7 +896,7 @@
 	}
 
 	.small-btn:hover {
-		background-color: rgba(143, 179, 154, 0.28);
+		background-color: rgba(163, 201, 176, 0.3);
 		border-color: var(--color-accent);
 	}
 
@@ -1060,7 +1073,7 @@
 	}
 
 	.show-more-btn:hover:not(:disabled) {
-		background-color: rgba(143, 179, 154, 0.28);
+		background-color: rgba(163, 201, 176, 0.3);
 		border-color: var(--color-accent);
 		transform: translateY(-1px);
 	}
@@ -1082,7 +1095,7 @@
 		left: 0;
 		right: 0;
 		bottom: 0;
-		background-color: rgba(6, 10, 8, 0.92);
+		background-color: rgba(12, 18, 16, 0.9);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -1147,6 +1160,7 @@
 		object-fit: contain;
 		border-radius: var(--radius-md);
 		box-shadow: var(--shadow-soft);
+		transition: box-shadow 1.5s ease;
 	}
 
 	.modal-meta {

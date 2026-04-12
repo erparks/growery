@@ -2,10 +2,13 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import PhotoHistories from '$lib/components/PhotoHistories.svelte';
+	import { pickMicrocopy } from '$lib/microcopy.js';
 
-	let plant = null;
-	let loading = true;
-	let error = null;
+	let plant = $state(null);
+	let loading = $state(true);
+	let error = $state(null);
+	let plantLoadingLine = $state('');
+	let plantSubtitle = $state('');
 
 	const fetchPlantData = async () => {
 		try {
@@ -33,6 +36,26 @@
 		} finally {
 			loading = false;
 		}
+	};
+
+	const formatDateShort = (dateString) => {
+		if (!dateString) return '…';
+		const date = new Date(dateString);
+		const monthNames = [
+			'Jan.',
+			'Feb.',
+			'Mar.',
+			'Apr.',
+			'May.',
+			'Jun.',
+			'Jul.',
+			'Aug.',
+			'Sep.',
+			'Oct.',
+			'Nov.',
+			'Dec.'
+		];
+		return `${monthNames[date.getMonth()]} ${date.getDate().toString().padStart(2, '0')}, ${date.getFullYear()}`;
 	};
 
 	const formatDate = (dateString) => {
@@ -77,7 +100,17 @@
 		return `${formattedDate} (${timeAgo})`;
 	};
 
+	$effect(() => {
+		if (!plant?.created_at) {
+			plantSubtitle = '';
+			return;
+		}
+		const fd = formatDateShort(plant.created_at);
+		plantSubtitle = `Since ${fd}.`;
+	});
+
 	onMount(() => {
+		plantLoadingLine = pickMicrocopy('plantLoading', new Date());
 		fetchPlantData();
 	});
 </script>
@@ -85,11 +118,11 @@
 <main>
 	<div class="container column">
 		<div class="container">
-			<a href="/" class="app-title">growery</a>
+			<a href="/" class="app-title app-title--streetlight">growery</a>
 		</div>
 
 		{#if loading}
-			<div class="loading">Loading plant data...</div>
+			<div class="loading">{plantLoadingLine || 'Loading plant data...'}</div>
 		{:else if error}
 			<div class="error">{error}</div>
 		{:else if plant}
@@ -97,6 +130,9 @@
 				<!-- Plant Information Table -->
 				<section class="card">
 					<h2>{plant.nickname}</h2>
+					{#if plantSubtitle}
+						<p class="microcopy microcopy-muted plant-detail-subtitle">{plantSubtitle}</p>
+					{/if}
 					<table class="info-table">
 						<tbody>
 							<tr>

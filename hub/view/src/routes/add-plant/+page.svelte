@@ -1,6 +1,10 @@
 <script>
+	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import exifr from 'exifr';
+	import { pickMicrocopy } from '$lib/microcopy.js';
+
+	let addPlantSubtitle = $state('');
 
 	let nickname = '';
 	let species = '';
@@ -152,12 +156,19 @@
 			fileInput.value = '';
 		}
 	};
+
+	onMount(() => {
+		addPlantSubtitle = pickMicrocopy('addPlantSubtitle', new Date());
+	});
 </script>
 
 <main>
 	<div class="container column">
 		<div class="container">
 			<h1 class="form-page-title">Add New Plant</h1>
+			{#if addPlantSubtitle}
+				<p class="microcopy microcopy-muted form-page-subtitle">{addPlantSubtitle}</p>
+			{/if}
 		</div>
 
 		<div class="form-container">

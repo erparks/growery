@@ -1,27 +1,37 @@
-/* Night greenhouse — design tokens */
+/* Night greenhouse — pastel-tinted tokens (softer + a bit lighter) */
 :root {
-    --color-bg: #0a0f0d;
-    --color-bg-top: #101816;
-    --color-surface: rgba(18, 26, 22, 0.72);
-    --color-surface-solid: #131a17;
-    --color-surface-raised: rgba(28, 38, 33, 0.85);
-    --color-border: rgba(130, 158, 142, 0.2);
-    --color-border-strong: rgba(130, 158, 142, 0.38);
-    --color-text: #e4ebe6;
-    --color-text-muted: #8fa396;
-    --color-heading: #dce8df;
-    --color-accent: #8fb39a;
-    --color-accent-soft: rgba(143, 179, 154, 0.18);
-    --color-accent-warm: #c9a86c;
-    --color-danger: #c08080;
-    --color-danger-soft: rgba(192, 128, 128, 0.15);
+    --color-bg: #121a17;
+    --color-bg-top: #1a2622;
+    --color-surface: rgba(32, 44, 38, 0.74);
+    --color-surface-solid: #1e2a24;
+    --color-surface-raised: rgba(42, 56, 50, 0.88);
+    /* Distant city-light gold through glass (lines + frames) */
+    --color-gold: #d4ad58;
+    --color-gold-muted: rgba(215, 190, 120, 0.38);
+    --color-border: rgba(210, 185, 115, 0.4);
+    --color-border-strong: rgba(228, 200, 130, 0.68);
+    --color-text: #e9f0ec;
+    --color-text-muted: #9fb5aa;
+    --color-heading: #e8f2e9;
+    --color-accent: #a3c9b0;
+    --color-accent-soft: rgba(163, 201, 176, 0.2);
+    --color-accent-warm: #d4c4a8;
+    --color-danger: #c9a8a8;
+    --color-danger-soft: rgba(201, 168, 168, 0.18);
     --radius-sm: 6px;
     --radius-md: 12px;
     --radius-lg: 16px;
     --radius-full: 9999px;
-    --shadow-soft: 0 12px 40px rgba(0, 0, 0, 0.35);
-    --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.28);
+    /* Static fallbacks before sunTheme.js runs; dual-layer approximates crisp + diffuse cast */
+    --shadow-soft:
+        0 10px 8px rgba(0, 0, 0, 0.28),
+        0 12px 40px rgba(8, 14, 12, 0.34);
+    --shadow-card:
+        0 4px 3px rgba(0, 0, 0, 0.38),
+        0 4px 20px rgba(8, 14, 12, 0.3);
     --font-sans: 'DM Sans', system-ui, -apple-system, sans-serif;
+    /* Display wordmark — warm literary serif, pairs with DM Sans UI */
+    --font-display-serif: 'Cormorant Garamond', 'Cormorant', Georgia, 'Times New Roman', serif;
     --focus-ring: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-accent);
 }
 
@@ -84,6 +94,7 @@
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     box-shadow: var(--shadow-card);
+    transition: box-shadow 1.5s ease;
 }
 
 a {
@@ -101,33 +112,57 @@ a:focus-visible {
     border-radius: var(--radius-sm);
 }
 
+html {
+    min-height: 100%;
+    background-color: var(--color-bg);
+}
+
 body {
     margin: 0;
     min-height: 100vh;
     background-color: var(--color-bg);
-    background-image: linear-gradient(
-        168deg,
-        var(--color-bg-top) 0%,
-        var(--color-bg) 42%,
-        #080b09 100%
+    background-image: var(
+        --sky-gradient,
+        linear-gradient(168deg, var(--color-bg-top) 0%, var(--color-bg) 44%, #0f1613 100%)
     );
+    background-attachment: fixed;
     color: var(--color-text);
     font-family: var(--font-sans);
     font-size: 1rem;
     line-height: 1.5;
     padding: 1.5rem clamp(1rem, 4vw, 2.5rem) 5rem;
     -webkit-font-smoothing: antialiased;
+    transition:
+        background-color 1.5s ease,
+        background-image 1.5s ease;
 }
 
 .app-title {
-    font-family: var(--font-sans);
-    font-size: clamp(1.75rem, 5vw, 2.75rem);
-    font-weight: 500;
-    letter-spacing: 0.06em;
+    font-family: var(--font-display-serif);
+    font-size: clamp(2.85rem, 8.5vw, 4.5rem);
+    font-weight: 600;
+    letter-spacing: 0.035em;
     color: var(--color-heading);
     text-transform: lowercase;
     display: inline-block;
     margin: 0;
+}
+
+/* Warm street-lamp glow through glass + condensation: gold rim + bloom */
+.app-title.app-title--streetlight {
+    color: #f5eedc;
+    text-shadow:
+        0 0 1px rgba(255, 225, 170, 1),
+        0 0 2px rgba(255, 205, 120, 0.98),
+        0 0 4px rgba(255, 190, 95, 0.85),
+        0 0 10px rgba(255, 195, 105, 0.72),
+        0 0 22px rgba(255, 175, 80, 0.5),
+        0 0 40px rgba(230, 155, 65, 0.35),
+        0 0 64px rgba(195, 125, 45, 0.22),
+        0 0 96px rgba(155, 100, 35, 0.12);
+    transition:
+        color 0.3s ease,
+        text-shadow 0.35s ease;
 }
 
 .app-title.clickable {
@@ -157,6 +192,25 @@ a.app-title:hover {
 
 a.app-title:focus-visible {
     outline: 2px solid var(--color-accent);
+    outline-offset: 6px;
+    border-radius: var(--radius-sm);
+}
+
+a.app-title.app-title--streetlight:hover {
+    color: #fcf9f2;
+    text-shadow:
+        0 0 1px rgba(255, 235, 190, 1),
+        0 0 3px rgba(255, 215, 140, 1),
+        0 0 6px rgba(255, 195, 110, 0.92),
+        0 0 12px rgba(255, 200, 115, 0.8),
+        0 0 26px rgba(255, 185, 90, 0.58),
+        0 0 48px rgba(235, 165, 75, 0.42),
+        0 0 80px rgba(200, 135, 55, 0.26),
+        0 0 110px rgba(165, 110, 40, 0.14);
+}
+
+a.app-title.app-title--streetlight:focus-visible {
+    outline: 2px solid rgba(255, 210, 140, 0.65);
     outline-offset: 6px;
     border-radius: var(--radius-sm);
 }
@@ -213,7 +267,7 @@ a.app-title:focus-visible {
         border-color 0.2s ease,
         color 0.2s ease,
         transform 0.2s ease,
-        box-shadow 0.2s ease;
+        box-shadow 1.5s ease;
     box-shadow: var(--shadow-soft);
     display: flex;
     align-items: center;
@@ -222,9 +276,9 @@ a.app-title:focus-visible {
 }
 
 .floating-add-button:hover {
-    background: rgba(201, 168, 108, 0.12);
+    background: rgba(212, 196, 168, 0.16);
     border-color: var(--color-accent-warm);
-    color: #dcc39a;
+    color: #ebe3d4;
     transform: translateY(-2px);
 }
 
@@ -245,6 +299,48 @@ a.app-title:focus-visible {
     letter-spacing: 0.03em;
     color: var(--color-heading);
     margin: 0;
+}
+
+/* Taglines and subtitles (microcopy module) */
+.microcopy {
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+    line-height: 1.45;
+    color: var(--color-text-muted);
+}
+
+.microcopy-muted {
+    opacity: 0.92;
+}
+
+/* Home: stack title + tagline, align start (left) with the page column */
+.home-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    width: 100%;
+    max-width: 34rem;
+}
+
+.home-tagline {
+    display: block;
+    width: 100%;
+    max-width: 32rem;
+    margin: 0.45rem 0 0;
+    text-align: left;
+    font-size: clamp(1.08rem, 2.5vw, 1.22rem);
+    line-height: 1.5;
+}
+
+.form-page-subtitle {
+    margin: 0.35rem auto 0;
+    max-width: 28rem;
+    text-align: center;
+}
+
+.plant-detail-subtitle {
+    margin: 0.35rem 0 1rem;
+    text-align: left;
 }
 
 .form-label {
@@ -268,7 +364,7 @@ a.app-title:focus-visible {
 }
 
 .form-field::placeholder {
-    color: rgba(143, 163, 150, 0.45);
+    color: rgba(159, 181, 170, 0.5);
 }
 
 .form-field:focus {
@@ -345,7 +441,7 @@ a.app-title:focus-visible {
 }
 
 .btn-primary:hover:not(:disabled) {
-    background: rgba(143, 179, 154, 0.28);
+    background: rgba(163, 201, 176, 0.3);
     border-color: var(--color-accent);
 }
 
@@ -356,13 +452,13 @@ a.app-title:focus-visible {
 }
 
 .btn-ghost:hover:not(:disabled) {
-    border-color: var(--color-text-muted);
+    border-color: var(--color-border-strong);
     color: var(--color-text);
 }
 
 .form-error {
     background-color: var(--color-danger-soft);
-    border: 1px solid rgba(192, 128, 128, 0.45);
+    border: 1px solid rgba(201, 168, 168, 0.4);
     color: var(--color-danger);
     padding: 0.75rem 1rem;
     border-radius: var(--radius-sm);
