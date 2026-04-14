@@ -6,13 +6,13 @@
 
 	let addPlantSubtitle = $state('');
 
-	let nickname = '';
-	let species = '';
-	let imageFile = null;
-	let imagePreview = null;
-	let imageDate = null;
-	let submitting = false;
-	let error = '';
+	let nickname = $state('');
+	let species = $state('');
+	let imageFile = $state(null);
+	let imagePreview = $state(null);
+	let imageDate = $state(null);
+	let submitting = $state(false);
+	let error = $state('');
 
 	const extractImageDate = async (file) => {
 		try {
@@ -133,8 +133,8 @@
 				}
 			}
 
-			// Success - redirect to home
-			goto('/');
+			// Success - open the new plant
+			goto(`/plant_detail?plant_id=${newPlant.id}`);
 		} catch (err) {
 			error = 'Network error. Please try again.';
 			console.error('Error creating plant:', err);

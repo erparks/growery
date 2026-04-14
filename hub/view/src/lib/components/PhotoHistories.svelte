@@ -1,19 +1,15 @@
 <script>
 	import { onMount } from 'svelte';
-	import { goto } from '$app/navigation';
 	import { NoteService } from '$lib/services/noteService.js';
 	import { pickMicrocopy } from '$lib/microcopy.js';
+	import { formatTimeAgo } from '$lib/formatTimeAgo.js';
 
-	let { plantId } = $props();
+	let { plantId, onTimelineRefresh } = $props();
 
 	let timelineItems = $state([]);
 	let displayedCount = $state(5);
 	let loading = $state(false);
-	let groupPhotosByDate = $state([]);
 	let enlargedImage = $state(null);
-	let uploading = $state(false);
-	let uploadProgress = $state('');
-	let fileInput = null;
 
 	let editingNoteId = $state(null);
 	let editingContent = $state('');
@@ -23,12 +19,32 @@
 	let sectionTitle = $state('Images & Notes');
 	let timelineLoadingLine = $state('');
 	let timelineEmptyLine = $state('');
-	let uploadLabel = $state('Upload');
-	let addNoteLabel = $state('Add note');
-
+	/** Skip notifying parent on the first timeline fetch (parent loads notes in parallel). */
+	let timelineFetchCount = 0;
 	const loadMore = () => {
+		if (displayedCount >= timelineItems.length) return;
 		displayedCount += 10;
 	};
+
+	/** Bottom sentinel for infinite scroll (when more items are buffered client-side) */
+	let loadMoreSentinel = $state(null);
+
+	$effect(() => {
+		const el = loadMoreSentinel;
+		if (!el || typeof IntersectionObserver === 'undefined') return;
+
+		const observer = new IntersectionObserver(
+			(entries) => {
+				const entry = entries[0];
+				if (!entry?.isIntersecting) return;
+				requestAnimationFrame(() => loadMore());
+			},
+			{ root: null, rootMargin: '0px 0px 200px 0px', threshold: 0 }
+		);
+
+		observer.observe(el);
+		return () => observer.disconnect();
+	});
 
 	const fetchTimeline = async () => {
 		if (loading) return;
@@ -39,6 +55,10 @@
 			console.error('Error fetching timeline:', err);
 		} finally {
 			loading = false;
+			timelineFetchCount += 1;
+			if (timelineFetchCount > 1) {
+				onTimelineRefresh?.();
+			}
 		}
 	};
 
@@ -47,57 +67,34 @@
 		sectionTitle = pickMicrocopy('timelineSectionTitle', d);
 		timelineLoadingLine = pickMicrocopy('timelineLoading', d);
 		timelineEmptyLine = pickMicrocopy('timelineEmpty', d);
-		uploadLabel = pickMicrocopy('timelineUploadLabel', d);
-		addNoteLabel = pickMicrocopy('timelineAddNoteLabel', d);
 		fetchTimeline();
 	});
 
-	const getDateKey = (dateString) => {
-		if (!dateString) return '';
-		const date = new Date(dateString);
-		return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-	};
+	/** Called from plant detail after uploads so the grid refreshes */
+	export async function refreshTimeline() {
+		await fetchTimeline();
+	}
 
 	const displayedItems = $derived(timelineItems.slice(0, displayedCount));
 	const hasMore = $derived(displayedCount < timelineItems.length);
 
-	$effect(() => {
-		const groups = new Map();
-		for (const item of displayedItems) {
-			const dateKey = getDateKey(item.created_at);
-			if (!groups.has(dateKey)) {
-				groups.set(dateKey, []);
-			}
-			groups.get(dateKey).push(item);
-		}
-		// Convert to array of { date, items } objects, sorted by date (newest first)
-		groupPhotosByDate = Array.from(groups.entries())
-			.map(([dateKey, items]) => ({
-				date: items[0].created_at, // Use the first item's date for formatting
-				items
-			}))
-			.sort((a, b) => new Date(b.date) - new Date(a.date));
-	});
+	const timelinePhotoItems = $derived(timelineItems.filter((item) => item.kind === 'photo'));
+	const enlargedPhotoIndex = $derived(
+		enlargedImage
+			? timelinePhotoItems.findIndex((item) => item.photo_history.id === enlargedImage.id)
+			: -1
+	);
 
-	const formatDateHeader = (dateString) => {
-		if (!dateString) return 'N/A';
-		const date = new Date(dateString);
+	const goPrevPhoto = () => {
+		const i = enlargedPhotoIndex;
+		if (i <= 0) return;
+		enlargedImage = timelinePhotoItems[i - 1].photo_history;
+	};
 
-		const monthNames = [
-			'January',
-			'February',
-			'March',
-			'April',
-			'May',
-			'June',
-			'July',
-			'August',
-			'September',
-			'October',
-			'November',
-			'December'
-		];
-		return `${monthNames[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+	const goNextPhoto = () => {
+		const i = enlargedPhotoIndex;
+		if (i < 0 || i >= timelinePhotoItems.length - 1) return;
+		enlargedImage = timelinePhotoItems[i + 1].photo_history;
 	};
 
 	const getImageUrl = (photoHistory) => {
@@ -121,6 +118,12 @@
 		const handler = (e) => {
 			if (e.key === 'Escape') {
 				closeEnlarged();
+			} else if (e.key === 'ArrowLeft') {
+				e.preventDefault();
+				goPrevPhoto();
+			} else if (e.key === 'ArrowRight') {
+				e.preventDefault();
+				goNextPhoto();
 			}
 		};
 		window.addEventListener('keydown', handler);
@@ -128,96 +131,6 @@
 			window.removeEventListener('keydown', handler);
 		};
 	});
-
-	const formatDate = (dateString) => {
-		if (!dateString) return 'N/A';
-		const date = new Date(dateString);
-
-		const monthNames = [
-			'Jan.',
-			'Feb.',
-			'Mar.',
-			'Apr.',
-			'May.',
-			'Jun.',
-			'Jul.',
-			'Aug.',
-			'Sep.',
-			'Oct.',
-			'Nov.',
-			'Dec.'
-		];
-		const formattedDate = `${monthNames[date.getMonth()]} ${date.getDate().toString().padStart(2, '0')}, ${date.getFullYear()}`;
-
-		const now = new Date();
-		const seconds = Math.floor((now - date) / 1000);
-
-		const timeAgo = (() => {
-			const units = [
-				{ label: 'week', secs: 60 * 60 * 24 * 7 },
-				{ label: 'day', secs: 60 * 60 * 24 },
-				{ label: 'hour', secs: 60 * 60 },
-				{ label: 'minute', secs: 60 }
-			];
-			for (const { label, secs } of units) {
-				const value = Math.floor(seconds / secs);
-				if (value >= 1) {
-					return `${value} ${label}${value > 1 ? 's' : ''} ago`;
-				}
-			}
-			return 'just now';
-		})();
-
-		return `${formattedDate} (${timeAgo})`;
-	};
-
-	const handleFileSelect = async (event) => {
-		const files = Array.from(event.target.files || []);
-		if (files.length === 0) return;
-
-		uploading = true;
-		uploadProgress = '';
-
-		try {
-			for (let i = 0; i < files.length; i++) {
-				const file = files[i];
-				uploadProgress = `Uploading ${i + 1} of ${files.length}: ${file.name}`;
-
-				const formData = new FormData();
-				formData.append('image', file);
-
-				const response = await fetch(`/api/plants/${plantId}/photo_histories`, {
-					method: 'POST',
-					body: formData
-				});
-
-				if (!response.ok) {
-					const error = await response.json();
-					throw new Error(error.error || `Failed to upload ${file.name}`);
-				}
-			}
-
-			uploadProgress = 'Upload complete!';
-
-			// Refresh the timeline
-			await fetchTimeline();
-
-			// Clear the file input
-			if (fileInput) {
-				fileInput.value = '';
-			}
-
-			// Clear progress message after a short delay
-			setTimeout(() => {
-				uploadProgress = '';
-			}, 2000);
-		} catch (error) {
-			uploadProgress = `Error: ${error.message}`;
-			console.error('Upload error:', error);
-		} finally {
-			uploading = false;
-		}
-	};
 
 	const toIsoOrNull = (datetimeLocalValue) => {
 		if (!datetimeLocalValue) return null;
@@ -314,12 +227,6 @@
 		}
 	};
 
-	const triggerFileInput = () => {
-		if (fileInput) {
-			fileInput.click();
-		}
-	};
-
 	const deletePhoto = async (photoId) => {
 		if (!confirm('Are you sure you want to delete this photo? This action cannot be undone.')) {
 			return;
@@ -344,43 +251,15 @@
 	};
 </script>
 
-<section class="card">
-	<div class="card-header">
-		<h2>{sectionTitle}</h2>
-		<div class="header-actions">
-			<button class="upload-btn" onclick={() => goto(`/add-note?plant_id=${plantId}`)}
-				>{addNoteLabel}</button
-			>
-			<button class="upload-btn" onclick={triggerFileInput} disabled={uploading}>
-				{uploading ? 'Uploading...' : uploadLabel}
-			</button>
-		</div>
-		<input
-			type="file"
-			accept="image/*"
-			multiple
-			bind:this={fileInput}
-			onchange={handleFileSelect}
-			style="display: none;"
-		/>
-	</div>
-	{#if uploadProgress}
-		<div class="upload-progress">{uploadProgress}</div>
-	{/if}
+<section class="photo-timeline" aria-label="Photos and notes">
+	<h2 class="timeline-heading">{sectionTitle}</h2>
 	{#if loading && timelineItems.length === 0}
 		<p class="no-photos">{timelineLoadingLine || 'Loading timeline...'}</p>
 	{:else if timelineItems.length === 0}
 		<p class="no-photos">{timelineEmptyLine || 'No images or notes yet for this plant.'}</p>
 	{:else}
-		<div class="photos-container">
-			{#each groupPhotosByDate as dateGroup}
-				<div class="date-section">
-					<div class="date-divider">
-						<h3 class="date-header">{formatDateHeader(dateGroup.date)}</h3>
-						<div class="divider-line"></div>
-					</div>
-					<div class="photos-grid">
-						{#each dateGroup.items as item}
+		<div class="photos-grid">
+			{#each displayedItems as item}
 							{#if item.kind === 'photo'}
 								<div
 									class="photo-item"
@@ -422,13 +301,13 @@
 									</button>
 									<img
 										src={getImageUrl(item.photo_history)}
-										alt="Plant photo from {formatDate(item.photo_history.created_at)}"
+										alt="Plant photo from {formatTimeAgo(item.photo_history.created_at)}"
 										loading="lazy"
 										class="clickable-image"
 									/>
 									<div class="photo-meta">
 										<div class="meta-row">
-											<span class="photo-date">{formatDate(item.photo_history.created_at)}</span>
+											<span class="photo-date">{formatTimeAgo(item.photo_history.created_at)}</span>
 											<button
 												class="small-btn"
 												onclick={(e) => {
@@ -491,14 +370,14 @@
 																<div class="note-content">{note.content}</div>
 																<div class="note-sub">
 																	<div class="note-line note-time">
-																		Created: {formatDate(note.created_at)}
+																		Created: {formatTimeAgo(note.created_at)}
 																	</div>
 																	{#if note.due_date}
-																		<div class="note-line note-due">Due: {formatDate(note.due_date)}</div>
+																		<div class="note-line note-due">Due: {formatTimeAgo(note.due_date)}</div>
 																	{/if}
 																	{#if note.completed_at}
 																		<div class="note-line note-completed">
-																			Completed: {formatDate(note.completed_at)}
+																			Completed: {formatTimeAgo(note.completed_at)}
 																		</div>
 																	{/if}
 																</div>
@@ -607,31 +486,28 @@
 										</div>
 										<div class="note-sub">
 											<div class="note-line note-time">
-												Created: {formatDate(item.note.created_at)}
+												Created: {formatTimeAgo(item.note.created_at)}
 											</div>
 											{#if item.note.due_date}
-												<div class="note-line note-due">Due: {formatDate(item.note.due_date)}</div>
+												<div class="note-line note-due">Due: {formatTimeAgo(item.note.due_date)}</div>
 											{/if}
 											{#if item.note.completed_at}
 												<div class="note-line note-completed">
-													Completed: {formatDate(item.note.completed_at)}
+													Completed: {formatTimeAgo(item.note.completed_at)}
 												</div>
 											{/if}
 										</div>
 									{/if}
 								</div>
 							{/if}
-						{/each}
-					</div>
-				</div>
 			{/each}
 		</div>
 		{#if hasMore}
-			<div class="show-more-container">
-				<button class="show-more-btn" onclick={loadMore} disabled={loading}>
-					{loading ? 'Loading...' : 'Show More'}
-				</button>
-			</div>
+			<div
+				class="timeline-load-sentinel"
+				bind:this={loadMoreSentinel}
+				aria-hidden="true"
+			></div>
 		{/if}
 	{/if}
 </section>
@@ -652,138 +528,101 @@
 			onclick={closeEnlarged}
 		></button>
 		<div class="modal-content" role="document">
-			<button class="close-button" onclick={closeEnlarged} aria-label="Close enlarged image"
-				>×</button
-			>
-			<img
-				src={getImageUrl(enlargedImage)}
-				alt="Plant photo from {formatDate(enlargedImage.created_at)}"
-				class="enlarged-image"
-			/>
+			<div class="modal-image-wrap">
+				{#if enlargedPhotoIndex > 0}
+					<button
+						type="button"
+						class="modal-nav-btn modal-nav-prev"
+						onclick={(e) => {
+							e.stopPropagation();
+							goPrevPhoto();
+						}}
+						aria-label="Previous image"
+					>
+						<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+							<path
+								fill="currentColor"
+								d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z"
+							/>
+						</svg>
+					</button>
+				{/if}
+				{#if enlargedPhotoIndex >= 0 && enlargedPhotoIndex < timelinePhotoItems.length - 1}
+					<button
+						type="button"
+						class="modal-nav-btn modal-nav-next"
+						onclick={(e) => {
+							e.stopPropagation();
+							goNextPhoto();
+						}}
+						aria-label="Next image"
+					>
+						<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+							<path
+								fill="currentColor"
+								d="M10 6 8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"
+							/>
+						</svg>
+					</button>
+				{/if}
+				<button class="close-button" onclick={closeEnlarged} aria-label="Close enlarged image"
+					>×</button
+				>
+				<img
+					src={getImageUrl(enlargedImage)}
+					alt="Plant photo from {formatTimeAgo(enlargedImage.created_at)}"
+					class="enlarged-image"
+				/>
+			</div>
 			<div class="modal-meta">
-				<span class="modal-date">{formatDate(enlargedImage.created_at)}</span>
+				<span class="modal-date">{formatTimeAgo(enlargedImage.created_at)}</span>
 			</div>
 		</div>
 	</div>
 {/if}
 
 <style>
-	.card {
-		margin: 2rem 0;
+	/* No panel behind header/grid — cards sit on the page sky gradient */
+	.photo-timeline {
+		margin: 0.5rem 0 1rem;
+		padding: 0;
 		text-align: left;
+		background: transparent;
+		border: none;
+		box-shadow: none;
+		backdrop-filter: none;
 	}
 
-	.card-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		margin-bottom: 1rem;
-		gap: 1rem;
-		flex-wrap: wrap;
-	}
-
-	.header-actions {
-		display: flex;
-		gap: 0.75rem;
-		align-items: center;
-		flex-wrap: wrap;
-	}
-
-	.card h2 {
+	.timeline-heading {
 		color: var(--color-heading);
-		margin: 0;
+		margin: 0 0 0.75rem;
 		font-size: 1.5rem;
 		font-weight: 600;
 		letter-spacing: 0.02em;
 	}
 
-	.upload-btn {
-		background-color: var(--color-accent-soft);
-		border: 1px solid var(--color-border-strong);
-		color: var(--color-heading);
-		padding: 0.5rem 1.25rem;
-		border-radius: var(--radius-md);
-		font-size: 0.9rem;
-		cursor: pointer;
-		transition:
-			background-color 0.2s ease,
-			border-color 0.2s ease,
-			transform 0.2s ease;
-		font-family: inherit;
-	}
-
-	.upload-btn:hover:not(:disabled) {
-		background-color: rgba(163, 201, 176, 0.3);
-		border-color: var(--color-accent);
-		transform: translateY(-1px);
-	}
-
-	.upload-btn:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
-	}
-
-	.upload-progress {
-		padding: 0.75rem 1rem;
-		background-color: var(--color-surface-solid);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
-		color: var(--color-text-muted);
-		margin-bottom: 1rem;
-		font-size: 0.9rem;
-	}
-
-	.photos-container {
-		display: flex;
-		flex-direction: column;
-		gap: 2rem;
-		margin-top: 1rem;
-	}
-
-	.date-section {
-		display: flex;
-		flex-direction: column;
-		gap: 1rem;
-	}
-
-	.date-divider {
-		display: flex;
-		align-items: center;
-		gap: 1rem;
-		margin-bottom: 0.5rem;
-	}
-
-	.date-header {
-		color: var(--color-text-muted);
-		font-size: 1.05rem;
-		font-weight: 500;
-		margin: 0;
-		white-space: nowrap;
-	}
-
-	.divider-line {
-		flex: 1;
-		height: 1px;
-		background: linear-gradient(
-			to right,
-			var(--color-border-strong),
-			transparent
-		);
-	}
-
 	.photos-grid {
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-		gap: 1.5rem;
+		width: 100%;
+		/* Match plant detail meta row: equal columns that grow to fill the section width */
+		grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+		gap: 1rem;
+		margin-top: 0.25rem;
+	}
+
+	@media (min-width: 768px) {
+		.photos-grid {
+			gap: 1.25rem;
+		}
 	}
 
 	.photo-item {
 		position: relative;
 		display: flex;
 		flex-direction: column;
-		width: fit-content;
+		width: 100%;
 		max-width: 100%;
-		justify-self: start;
+		justify-self: stretch;
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-md);
 		overflow: hidden;
@@ -847,18 +686,20 @@
 		}
 	}
 
+	/* Natural aspect ratio: width follows column, height from image intrinsic ratio */
 	.photo-item img {
-		height: 220px;
-		width: auto;
-		max-width: 100%;
-		object-fit: contain;
+		width: 100%;
+		height: auto;
 		display: block;
 		background: var(--color-bg);
 	}
 
-	/* When a note is long, allow the card to become wider (instead of becoming very tall). */
+	/* Long attached notes: span full row width of the grid */
 	.photo-item.wide {
-		width: min(100%, 680px);
+		grid-column: 1 / -1;
+		width: 100%;
+		max-width: min(100%, 952px);
+		justify-self: center;
 	}
 
 	.clickable-image {
@@ -1036,7 +877,7 @@
 	.note-input {
 		width: 100%;
 		min-width: 0;
-		flex: 1 1 220px;
+		flex: 1 1 308px;
 	}
 
 	.photo-date {
@@ -1047,40 +888,16 @@
 	.no-photos {
 		color: var(--color-text-muted);
 		text-align: center;
-		padding: 2rem;
+		padding: 1.25rem 1rem;
 		font-style: italic;
 	}
 
-	.show-more-container {
-		display: flex;
-		justify-content: center;
-		margin-top: 2rem;
-	}
-
-	.show-more-btn {
-		background-color: var(--color-accent-soft);
-		border: 1px solid var(--color-border-strong);
-		color: var(--color-heading);
-		padding: 0.75rem 2rem;
-		border-radius: var(--radius-md);
-		font-size: 1rem;
-		cursor: pointer;
-		transition:
-			background-color 0.2s ease,
-			border-color 0.2s ease,
-			transform 0.2s ease;
-		font-family: inherit;
-	}
-
-	.show-more-btn:hover:not(:disabled) {
-		background-color: rgba(163, 201, 176, 0.3);
-		border-color: var(--color-accent);
-		transform: translateY(-1px);
-	}
-
-	.show-more-btn:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
+	/* Triggers IntersectionObserver when scrolled near bottom */
+	.timeline-load-sentinel {
+		width: 100%;
+		height: 1px;
+		margin-top: 0.5rem;
+		pointer-events: none;
 	}
 
 	@media (max-width: 600px) {
@@ -1115,6 +932,13 @@
 		z-index: 2;
 	}
 
+	.modal-image-wrap {
+		position: relative;
+		display: inline-block;
+		max-width: 100%;
+		line-height: 0;
+	}
+
 	.modal-backdrop {
 		position: absolute;
 		inset: 0;
@@ -1126,10 +950,48 @@
 		z-index: 1;
 	}
 
+	.modal-nav-btn {
+		position: absolute;
+		top: 50%;
+		transform: translateY(-50%);
+		z-index: 4;
+		width: 44px;
+		height: 44px;
+		padding: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 50%;
+		border: 1px solid var(--color-border-strong);
+		background: rgba(18, 26, 22, 0.85);
+		color: var(--color-heading);
+		cursor: pointer;
+		transition:
+			background 0.2s ease,
+			border-color 0.2s ease,
+			transform 0.2s ease;
+		font-family: inherit;
+		box-shadow: var(--shadow-soft);
+	}
+
+	.modal-nav-btn:hover {
+		background: var(--color-surface-raised);
+		border-color: var(--color-accent);
+	}
+
+	.modal-nav-prev {
+		left: 0.5rem;
+	}
+
+	.modal-nav-next {
+		right: 0.5rem;
+	}
+
 	.close-button {
 		position: absolute;
-		top: -2.5rem;
-		right: 0;
+		top: 0.5rem;
+		right: 0.5rem;
+		z-index: 5;
 		background: var(--color-surface-solid);
 		border: 1px solid var(--color-border-strong);
 		color: var(--color-text-muted);

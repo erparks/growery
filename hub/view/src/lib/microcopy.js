@@ -144,25 +144,6 @@ const TIMELINE_EMPTY = {
 	]
 };
 
-/** Short labels (2–3 words) for the timeline header buttons — neutral only (no time-of-day) */
-const TIMELINE_UPLOAD_LABEL = {
-	neutral: ['Upload', 'Add photos', 'Images']
-};
-
-const TIMELINE_ADD_NOTE_LABEL = {
-	neutral: ['Add note', 'Note', 'Journal']
-};
-
-/** Floating add button — descriptive but not time-specific */
-const FAB_ARIA = {
-	neutral: [
-		'Add a new plant',
-		'Add another plant',
-		'Bring another plant to the bench',
-		'Start a new plant'
-	]
-};
-
 const ADD_PLANT_SUB = {
 	neutral: [
 		'Name it, then watch it grow.',
@@ -216,12 +197,8 @@ export function pickMicrocopy(key, date = new Date(), ctx = {}) {
 			return pickFromPools(TIMELINE_LOADING, phase);
 		case 'timelineEmpty':
 			return pickFromPools(TIMELINE_EMPTY, phase);
-		case 'timelineUploadLabel':
-			return pickFromPools(TIMELINE_UPLOAD_LABEL, phase);
-		case 'timelineAddNoteLabel':
-			return pickFromPools(TIMELINE_ADD_NOTE_LABEL, phase);
 		case 'fabAria':
-			return pickFromPools(FAB_ARIA, phase);
+			return 'Add new plant';
 		case 'addPlantSubtitle':
 			return pickFromPools(ADD_PLANT_SUB, phase);
 		case 'addNoteSubtitle': {
