@@ -29,7 +29,9 @@
 <main>
 	<div class="container column">
 		<div class="container home-hero">
-			<h1 class="app-title app-title--streetlight">growery</h1>
+			<div class="home-hero-brand">
+				<h1 class="app-title app-title--streetlight">growery</h1>
+			</div>
 			{#if homeTagline}
 				<p class="microcopy microcopy-muted home-tagline">{homeTagline}</p>
 			{/if}

@@ -166,7 +166,7 @@
 
 <main class="plant-detail-page">
 	<div class="plant-detail-stack">
-		<div class="plant-detail-header">
+		<div class="app-brand-header">
 			<a href="/" class="app-title app-title--streetlight">growery</a>
 		</div>
 
@@ -283,13 +283,6 @@
 		align-items: stretch;
 		gap: 0.75rem;
 		width: 100%;
-	}
-
-	.plant-detail-header {
-		display: flex;
-		justify-content: center;
-		width: 100%;
-		margin-bottom: 0;
 	}
 
 	.plant-detail {

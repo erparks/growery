@@ -313,13 +313,20 @@ a.app-title.app-title--streetlight:focus-visible {
     opacity: 0.92;
 }
 
-/* Home: stack title + tagline, align start (left) with the page column */
+/* Home: stack title + tagline; growery centered via .home-hero-brand */
 .home-hero {
     flex-direction: column;
     align-items: flex-start;
     justify-content: flex-start;
     width: 100%;
     max-width: 34rem;
+    /* Keep the narrow hero column centered in the page (not stuck left on wide viewports) */
+    align-self: center;
+}
+
+.home-hero-brand {
+    width: 100%;
+    text-align: center;
 }
 
 .home-tagline {
@@ -327,9 +334,17 @@ a.app-title.app-title--streetlight:focus-visible {
     width: 100%;
     max-width: 32rem;
     margin: 0.45rem 0 0;
-    text-align: left;
+    text-align: center;
     font-size: clamp(1.08rem, 2.5vw, 1.22rem);
     line-height: 1.5;
+}
+
+/* Centered “growery” wordmark (plant detail, add-plant, add-note, etc.) */
+.app-brand-header {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-bottom: 0;
 }
 
 .form-page-subtitle {

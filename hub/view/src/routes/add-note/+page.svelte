@@ -96,6 +96,9 @@
 
 <main>
 	<div class="container column">
+		<div class="app-brand-header">
+			<a href="/" class="app-title app-title--streetlight">growery</a>
+		</div>
 		<div class="container">
 			<h1 class="form-page-title">
 				{#if loadingPlant}
